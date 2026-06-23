@@ -3,11 +3,20 @@
 import Image from "next/image"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import {
+  GoogleAuthProvider,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signInWithPopup,
+} from "firebase/auth"
+import { doc, getDoc, serverTimestamp, setDoc } from "firebase/firestore"
 import { Eye, EyeOff } from "lucide-react"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
+import { auth, db } from "@/lib/firebase"
+import { defaultProfile } from "@/lib/acordehub-types"
 
 interface AuthFormProps {
   mode: "login" | "register"
@@ -21,12 +30,62 @@ export function AuthForm({ mode }: AuthFormProps) {
     email: "",
     password: "",
   })
+  const [error, setError] = useState("")
+  const [loading, setLoading] = useState(false)
 
   const isLogin = mode === "login"
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const saveInitialUser = async (uid: string, email: string | null, name: string | null) => {
+    const userRef = doc(db, "users", uid)
+    const snapshot = await getDoc(userRef)
+    if (snapshot.exists()) return
+
+    await setDoc(userRef, {
+      ...defaultProfile(uid, email ?? "", name?.trim() || "Usuario"),
+      createdAt: serverTimestamp(),
+    })
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    router.push("/")
+    setError("")
+    setLoading(true)
+
+    try {
+      if (isLogin) {
+        await signInWithEmailAndPassword(auth, formData.email.trim(), formData.password)
+      } else {
+        const credential = await createUserWithEmailAndPassword(
+          auth,
+          formData.email.trim(),
+          formData.password
+        )
+        await saveInitialUser(credential.user.uid, credential.user.email, formData.name)
+      }
+      router.push("/")
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "No se pudo iniciar sesion")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleGoogle = async () => {
+    setError("")
+    setLoading(true)
+    try {
+      const credential = await signInWithPopup(auth, new GoogleAuthProvider())
+      await saveInitialUser(
+        credential.user.uid,
+        credential.user.email,
+        credential.user.displayName
+      )
+      router.push("/")
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "No se pudo continuar con Google")
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -108,8 +167,18 @@ export function AuthForm({ mode }: AuthFormProps) {
             </Field>
           </FieldGroup>
 
-          <Button type="submit" className="h-14 w-full rounded-[14px] bg-[#1a1a1a] text-base text-white hover:bg-[#2c2c2c]">
-            {isLogin ? "Iniciar sesion" : "Crear cuenta"}
+          {error && (
+            <p className="rounded-xl bg-white/70 px-4 py-3 text-sm font-medium text-red-700">
+              {error}
+            </p>
+          )}
+
+          <Button
+            type="submit"
+            disabled={loading}
+            className="h-14 w-full rounded-[14px] bg-[#1a1a1a] text-base text-white hover:bg-[#2c2c2c]"
+          >
+            {loading ? "Procesando..." : isLogin ? "Iniciar sesion" : "Crear cuenta"}
           </Button>
 
           {isLogin && (
@@ -123,6 +192,8 @@ export function AuthForm({ mode }: AuthFormProps) {
               <Button
                 type="button"
                 variant="outline"
+                disabled={loading}
+                onClick={handleGoogle}
                 className="h-14 w-full rounded-[14px] border-[#1a1a1a] bg-white text-[#1a1a1a] hover:bg-white/90"
               >
                 Continuar con Google
