@@ -1,233 +1,218 @@
 "use client"
 
 import Link from "next/link"
-import { Search, FolderKanban, User, AlertCircle, ArrowRight, Music, Guitar, Mic2 } from "lucide-react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
+import {
+  AlertCircle,
+  ArrowRight,
+  FolderKanban,
+  Headphones,
+  MessageCircle,
+  Mic2,
+  Plus,
+  Search,
+  Users,
+} from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
 
 const quickActions = [
   {
-    title: "Buscar músicos",
-    description: "Encuentra colaboradores para tu próximo proyecto",
-    icon: Search,
-    href: "/search",
-  },
-  {
-    title: "Mis proyectos",
-    description: "Gestiona tus colaboraciones activas",
-    icon: FolderKanban,
+    label: "Crear",
+    icon: Plus,
     href: "/projects",
+    className: "bg-[#fad080] text-[#d4881a]",
   },
   {
-    title: "Mi perfil",
-    description: "Actualiza tu información y habilidades",
-    icon: User,
-    href: "/profile",
-  },
-]
-
-const recommendedMusicians = [
-  {
-    id: 1,
-    name: "María García",
-    role: "Vocalista",
-    genres: ["Pop", "R&B"],
-    avatar: null,
-    initials: "MG",
+    label: "Explorar",
+    icon: Users,
+    href: "/search",
+    className: "bg-[#e3f2fd] text-[#1976d2]",
   },
   {
-    id: 2,
-    name: "Carlos López",
-    role: "Productor",
-    genres: ["Electrónica", "House"],
-    avatar: null,
-    initials: "CL",
-  },
-  {
-    id: 3,
-    name: "Ana Martínez",
-    role: "Guitarrista",
-    genres: ["Rock", "Blues"],
-    avatar: null,
-    initials: "AM",
-  },
-  {
-    id: 4,
-    name: "Pedro Sánchez",
-    role: "Baterista",
-    genres: ["Jazz", "Funk"],
-    avatar: null,
-    initials: "PS",
+    label: "Demos",
+    icon: Headphones,
+    href: "/projects",
+    className: "bg-[#e8f5e9] text-[#2e7d32]",
   },
 ]
 
-const recommendedProjects = [
+const musicians = [
+  { name: "Maria Garcia", role: "Vocalista", tags: ["Pop", "R&B"], initials: "MG" },
+  { name: "Carlos Lopez", role: "Productor", tags: ["Electronica", "House"], initials: "CL" },
+  { name: "Ana Martinez", role: "Guitarrista", tags: ["Rock", "Blues"], initials: "AM" },
+]
+
+const projects = [
   {
-    id: 1,
-    title: "EP de Jazz Fusión",
-    description: "Buscando bajo y teclados para EP de 5 canciones",
-    neededRoles: ["Bajista", "Tecladista"],
-    status: "open",
+    title: "EP de Jazz Fusion",
+    description: "Buscando bajo y teclados para un EP de 5 canciones.",
+    tags: ["Con demo", "Jazz"],
   },
   {
-    id: 2,
     title: "Single Pop Latino",
-    description: "Producción lista, necesitamos vocalista femenina",
-    neededRoles: ["Vocalista"],
-    status: "open",
+    description: "Produccion lista, falta sumar una voz principal.",
+    tags: ["Abierto", "Pop"],
   },
 ]
 
 export function HomeDashboard() {
-  const userName = "Juan"
-  const profileIncomplete = true
-
   return (
-    <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-      {/* Welcome Section */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
-          Hola, {userName}
-        </h1>
-        <p className="mt-2 text-lg text-muted-foreground">
-          El lugar donde los músicos se conectan
-        </p>
-      </div>
-
-      {/* Profile Incomplete Alert */}
-      {profileIncomplete && (
-        <Card className="mb-8 border-amber-500/20 bg-amber-500/5">
-          <CardContent className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-start gap-3">
-              <AlertCircle className="mt-0.5 h-5 w-5 flex-shrink-0 text-amber-500" />
-              <div>
-                <p className="font-medium text-amber-500">Completa tu perfil</p>
-                <p className="text-sm text-muted-foreground">
-                  Añade tus instrumentos y géneros para que otros músicos te encuentren
-                </p>
-              </div>
-            </div>
-            <Button asChild variant="outline" className="border-amber-500/30 text-amber-500 hover:bg-amber-500/10">
-              <Link href="/profile">
-                Completar perfil
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Link>
-            </Button>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Quick Actions */}
-      <section className="mb-12">
-        <h2 className="mb-4 text-xl font-semibold">Acceso rápido</h2>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {quickActions.map((action) => {
-            const Icon = action.icon
-            return (
-              <Link key={action.href} href={action.href}>
-                <Card className="group h-full transition-all hover:border-primary/50 hover:bg-secondary/30">
-                  <CardHeader>
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 transition-colors group-hover:bg-primary/20">
-                        <Icon className="h-5 w-5 text-primary" />
-                      </div>
-                      <div>
-                        <CardTitle className="text-base">{action.title}</CardTitle>
-                        <CardDescription className="text-sm">
-                          {action.description}
-                        </CardDescription>
-                      </div>
-                    </div>
-                  </CardHeader>
-                </Card>
-              </Link>
-            )
-          })}
+    <main className="mobile-shell px-5 pb-28 pt-6 md:max-w-7xl md:px-8 md:pb-12">
+      <section className="flex items-center justify-between gap-4">
+        <div className="flex min-w-0 items-center gap-3">
+          <Avatar className="h-12 w-12 border border-[#1a1a1a]">
+            <AvatarImage src="/placeholder-user.jpg" alt="Usuario" />
+            <AvatarFallback className="bg-[#fff1c8] text-[#1a1a1a]">JM</AvatarFallback>
+          </Avatar>
+          <div className="min-w-0">
+            <h1 className="truncate text-lg font-bold text-[#1a1a1a]">Hola, Musico!</h1>
+            <p className="truncate text-xs font-medium text-[#2c2c2c]">Que vamos a crear hoy?</p>
+          </div>
+        </div>
+        <div className="flex gap-2 md:hidden">
+          <Button size="icon" variant="ghost" className="h-10 w-10 rounded-full">
+            <AlertCircle className="h-5 w-5" />
+          </Button>
+          <Button size="icon" variant="ghost" className="h-10 w-10 rounded-full">
+            <MessageCircle className="h-5 w-5" />
+          </Button>
         </div>
       </section>
 
-      {/* Recommendations Grid */}
-      <div className="grid gap-8 lg:grid-cols-2">
-        {/* Recommended Musicians */}
-        <section>
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-xl font-semibold">Músicos recomendados</h2>
-            <Button variant="ghost" size="sm" asChild>
-              <Link href="/search" className="text-muted-foreground hover:text-foreground">
-                Ver todos
-                <ArrowRight className="ml-1 h-4 w-4" />
-              </Link>
-            </Button>
-          </div>
-          <div className="space-y-3">
-            {recommendedMusicians.map((musician) => (
-              <Card key={musician.id} className="transition-all hover:border-primary/50 hover:bg-secondary/30">
-                <CardContent className="flex items-center justify-between p-4">
-                  <div className="flex items-center gap-3">
-                    <Avatar className="h-12 w-12">
-                      <AvatarImage src={musician.avatar || undefined} />
-                      <AvatarFallback className="bg-secondary text-sm">
-                        {musician.initials}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <p className="font-medium">{musician.name}</p>
-                      <p className="text-sm text-muted-foreground">{musician.role}</p>
-                    </div>
-                  </div>
-                  <div className="flex flex-wrap justify-end gap-1.5">
-                    {musician.genres.map((genre) => (
-                      <Badge key={genre} variant="secondary" className="text-xs">
-                        {genre}
-                      </Badge>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </section>
+      <Link
+        href="/search"
+        className="mt-6 flex h-14 items-center gap-3 rounded-full bg-white px-5 text-sm text-[#666666] shadow-sm ring-1 ring-black/5 transition hover:ring-[#f5a623]/50"
+      >
+        <Search className="h-5 w-5" />
+        Buscar musicos, proyectos o demos...
+      </Link>
 
-        {/* Recommended Projects */}
-        <section>
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-xl font-semibold">Proyectos abiertos</h2>
-            <Button variant="ghost" size="sm" asChild>
-              <Link href="/projects" className="text-muted-foreground hover:text-foreground">
-                Ver todos
-                <ArrowRight className="ml-1 h-4 w-4" />
-              </Link>
-            </Button>
-          </div>
-          <div className="space-y-3">
-            {recommendedProjects.map((project) => (
-              <Card key={project.id} className="transition-all hover:border-primary/50 hover:bg-secondary/30">
-                <CardContent className="p-4">
-                  <div className="mb-2 flex items-start justify-between">
-                    <div>
-                      <h3 className="font-medium">{project.title}</h3>
-                      <p className="text-sm text-muted-foreground">{project.description}</p>
-                    </div>
-                    <Badge variant={project.status === "open" ? "default" : "secondary"} className="ml-2 shrink-0">
-                      {project.status === "open" ? "Abierto" : "En progreso"}
+      <section className="mt-6 grid grid-cols-3 gap-4">
+        {quickActions.map((action) => {
+          const Icon = action.icon
+          return (
+            <Link key={action.label} href={action.href} className="flex flex-col items-center gap-2">
+              <span className={`flex h-14 w-14 items-center justify-center rounded-2xl ${action.className}`}>
+                <Icon className="h-6 w-6" />
+              </span>
+              <span className="text-xs font-medium text-[#2c2c2c]">{action.label}</span>
+            </Link>
+          )
+        })}
+      </section>
+
+      <section className="mt-8 grid grid-cols-2 gap-4">
+        <Card className="rounded-2xl border-[#eeeeee] bg-white shadow-none">
+          <CardContent className="p-4">
+            <p className="text-xs text-[#2c2c2c]">Proyectos</p>
+            <p className="mt-1 text-base font-bold text-[#1a1a1a]">3 Activos</p>
+          </CardContent>
+        </Card>
+        <Card className="rounded-2xl border-[#eeeeee] bg-white shadow-none">
+          <CardContent className="p-4">
+            <p className="text-xs text-[#2c2c2c]">Tareas hoy</p>
+            <p className="mt-1 text-base font-bold text-[#1a1a1a]">5 Pendientes</p>
+          </CardContent>
+        </Card>
+      </section>
+
+      <section className="mt-8">
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="text-lg font-bold text-[#1a1a1a]">Basado en tus artistas</h2>
+          <Button variant="ghost" size="sm" asChild className="h-8 px-2 text-[#666666]">
+            <Link href="/search">
+              Ver
+              <ArrowRight className="ml-1 h-4 w-4" />
+            </Link>
+          </Button>
+        </div>
+        <div className="-mx-5 flex gap-3 overflow-x-auto px-5 pb-1 md:grid md:grid-cols-3 md:overflow-visible">
+          {musicians.map((musician) => (
+            <Card key={musician.name} className="min-w-56 rounded-2xl border-[#eeeeee] bg-white shadow-none">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <Avatar className="h-12 w-12">
+                    <AvatarFallback className="bg-[#fff1c8] text-[#1a1a1a]">{musician.initials}</AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <p className="font-semibold text-[#1a1a1a]">{musician.name}</p>
+                    <p className="text-sm text-[#666666]">{musician.role}</p>
+                  </div>
+                </div>
+                <div className="mt-3 flex flex-wrap gap-1.5">
+                  {musician.tags.map((tag) => (
+                    <Badge key={tag} variant="secondary" className="rounded-full bg-[#fff1c8] text-[#1a1a1a]">
+                      {tag}
                     </Badge>
-                  </div>
-                  <div className="flex flex-wrap gap-1.5">
-                    <span className="text-xs text-muted-foreground">Se busca:</span>
-                    {project.neededRoles.map((role) => (
-                      <Badge key={role} variant="outline" className="text-xs">
-                        {role}
-                      </Badge>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </section>
+
+      <section className="mt-8">
+        <div className="mb-2 flex items-center justify-between gap-3">
+          <div>
+            <h2 className="text-lg font-bold text-[#1a1a1a]">Proyectos destacados</h2>
+            <p className="text-xs text-[#2c2c2c]">Ideas recientes con demos para escuchar</p>
           </div>
-        </section>
-      </div>
+          <Button size="icon" className="h-11 w-11 rounded-2xl bg-[#fad080] text-[#d4881a] hover:bg-[#f7c948]">
+            <FolderKanban className="h-5 w-5" />
+          </Button>
+        </div>
+
+        <div className="mb-4 flex gap-2 overflow-x-auto">
+          {["Todos", "Con demo", "Mios"].map((chip, index) => (
+            <Badge
+              key={chip}
+              className={
+                index === 0
+                  ? "rounded-full bg-[#1a1a1a] px-4 py-1.5 text-white hover:bg-[#1a1a1a]"
+                  : "rounded-full bg-white px-4 py-1.5 text-[#1a1a1a] hover:bg-white"
+              }
+            >
+              {chip}
+            </Badge>
+          ))}
+        </div>
+
+        <div className="space-y-3">
+          {projects.map((project) => (
+            <Card key={project.title} className="rounded-2xl border-[#eeeeee] bg-white shadow-none">
+              <CardContent className="p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <h3 className="font-semibold text-[#1a1a1a]">{project.title}</h3>
+                    <p className="mt-1 text-sm text-[#666666]">{project.description}</p>
+                  </div>
+                  <Mic2 className="mt-1 h-5 w-5 shrink-0 text-[#f5a623]" />
+                </div>
+                <div className="mt-3 flex flex-wrap gap-1.5">
+                  {project.tags.map((tag) => (
+                    <Badge key={tag} variant="outline" className="rounded-full border-[#fad080] text-[#2c2c2c]">
+                      {tag}
+                    </Badge>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </section>
+
+      <section className="mt-8">
+        <h2 className="mb-3 text-lg font-bold text-[#1a1a1a]">Actividad reciente</h2>
+        <Card className="rounded-2xl border-[#eeeeee] bg-white shadow-none">
+          <CardContent className="space-y-2 p-4 text-sm text-[#2c2c2c]">
+            <p>Te uniste al proyecto Rock In Rio</p>
+            <p>Subiste una nueva demo: Blues Jam</p>
+          </CardContent>
+        </Card>
+      </section>
     </main>
   )
 }

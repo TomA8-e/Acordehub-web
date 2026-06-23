@@ -1,19 +1,12 @@
 "use client"
 
+import Image from "next/image"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Home, Search, FolderKanban, User, Menu, X, Music } from "lucide-react"
-import { useState } from "react"
-import { cn } from "@/lib/utils"
+import { Bell, FolderKanban, Home, MessageCircle, Search, User } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+import { cn } from "@/lib/utils"
 
 const navItems = [
   { href: "/", label: "Home", icon: Home },
@@ -24,26 +17,61 @@ const navItems = [
 
 export function Navbar() {
   const pathname = usePathname()
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
-  // Don't show navbar on auth pages
   if (pathname === "/login" || pathname === "/register") {
     return null
   }
 
   return (
-    <nav className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        {/* Logo */}
-        <Link href="/" className="flex items-center gap-2 transition-opacity hover:opacity-80">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
-            <Music className="h-5 w-5 text-primary-foreground" />
-          </div>
-          <span className="text-xl font-semibold tracking-tight">AcordeHub</span>
-        </Link>
+    <>
+      <header className="sticky top-0 z-40 border-b border-[#ead8aa] bg-[#fff8e7]/95 backdrop-blur">
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+          <Link href="/" className="flex items-center gap-2">
+            <Image src="/acordehub.png" alt="AcordeHub" width={38} height={38} className="object-contain" />
+            <span className="hidden text-xl font-bold text-[#1a1a1a] sm:inline">AcordeHub</span>
+          </Link>
 
-        {/* Desktop Navigation */}
-        <div className="hidden items-center gap-1 md:flex">
+          <nav className="hidden items-center gap-1 md:flex">
+            {navItems.map((item) => {
+              const Icon = item.icon
+              const isActive = pathname === item.href
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={cn(
+                    "flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition-colors",
+                    isActive
+                      ? "bg-[#1a1a1a] text-white"
+                      : "text-[#2c2c2c] hover:bg-[#fff1c8]"
+                  )}
+                >
+                  <Icon className="h-4 w-4" />
+                  {item.label}
+                </Link>
+              )
+            })}
+          </nav>
+
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full text-[#1a1a1a]">
+              <Bell className="h-5 w-5" />
+            </Button>
+            <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full text-[#1a1a1a]">
+              <MessageCircle className="h-5 w-5" />
+            </Button>
+            <Link href="/profile" aria-label="Perfil">
+              <Avatar className="h-10 w-10 border border-[#1a1a1a]">
+                <AvatarImage src="/placeholder-user.jpg" alt="Usuario" />
+                <AvatarFallback className="bg-[#fff1c8] text-sm text-[#1a1a1a]">JM</AvatarFallback>
+              </Avatar>
+            </Link>
+          </div>
+        </div>
+      </header>
+
+      <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-[#2a2a2a] bg-[#1a1a1a] px-2 pb-[max(env(safe-area-inset-bottom),0.5rem)] pt-2 text-white md:hidden">
+        <div className="mx-auto grid max-w-md grid-cols-4 gap-1">
           {navItems.map((item) => {
             const Icon = item.icon
             const isActive = pathname === item.href
@@ -52,96 +80,17 @@ export function Navbar() {
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors",
-                  isActive
-                    ? "bg-secondary text-foreground"
-                    : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground"
+                  "flex h-14 flex-col items-center justify-center gap-1 rounded-xl text-[11px] font-medium transition-colors",
+                  isActive ? "text-[#f7c948]" : "text-white/65"
                 )}
               >
-                <Icon className="h-4 w-4" />
+                <Icon className="h-5 w-5" />
                 {item.label}
               </Link>
             )
           })}
         </div>
-
-        {/* User Menu */}
-        <div className="flex items-center gap-3">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="relative h-9 w-9 rounded-full">
-                <Avatar className="h-9 w-9 ring-2 ring-border transition-all hover:ring-primary/50">
-                  <AvatarImage src="/placeholder-user.jpg" alt="Usuario" />
-                  <AvatarFallback className="bg-secondary text-sm">JM</AvatarFallback>
-                </Avatar>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <div className="flex items-center gap-2 p-2">
-                <Avatar className="h-8 w-8">
-                  <AvatarImage src="/placeholder-user.jpg" alt="Usuario" />
-                  <AvatarFallback className="bg-secondary text-xs">JM</AvatarFallback>
-                </Avatar>
-                <div className="flex flex-col">
-                  <span className="text-sm font-medium">Juan Músico</span>
-                  <span className="text-xs text-muted-foreground">juan@email.com</span>
-                </div>
-              </div>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem asChild>
-                <Link href="/profile">Mi Perfil</Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link href="/projects">Mis Proyectos</Link>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem asChild>
-                <Link href="/login" className="text-destructive">
-                  Cerrar Sesión
-                </Link>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          {/* Mobile Menu Button */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="md:hidden"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          >
-            {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-          </Button>
-        </div>
-      </div>
-
-      {/* Mobile Navigation */}
-      {mobileMenuOpen && (
-        <div className="border-t border-border md:hidden">
-          <div className="space-y-1 px-4 py-3">
-            {navItems.map((item) => {
-              const Icon = item.icon
-              const isActive = pathname === item.href
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={cn(
-                    "flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-colors",
-                    isActive
-                      ? "bg-secondary text-foreground"
-                      : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground"
-                  )}
-                >
-                  <Icon className="h-5 w-5" />
-                  {item.label}
-                </Link>
-              )
-            })}
-          </div>
-        </div>
-      )}
-    </nav>
+      </nav>
+    </>
   )
 }
