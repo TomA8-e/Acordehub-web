@@ -2,15 +2,15 @@
 
 import Link from "next/link"
 import {
-  AlertCircle,
   ArrowRight,
   FolderKanban,
   Headphones,
-  MessageCircle,
   Mic2,
   Plus,
   Search,
+  Sparkles,
   Users,
+  Wand2,
 } from "lucide-react"
 import { collection, doc, limit, onSnapshot, orderBy, query, where } from "firebase/firestore"
 import { useEffect, useMemo, useState } from "react"
@@ -24,22 +24,25 @@ import type { Project, UserProfile } from "@/lib/acordehub-types"
 
 const quickActions = [
   {
-    label: "Crear",
+    label: "Crear proyecto",
+    caption: "Publica una demo",
     icon: Plus,
     href: "/projects",
-    className: "bg-[#fad080] text-[#d4881a]",
+    className: "bg-[#fff3cf] text-[#c47a00]",
   },
   {
-    label: "Explorar",
+    label: "Explorar musicos",
+    caption: "Busca colaboradores",
     icon: Users,
     href: "/search",
-    className: "bg-[#e3f2fd] text-[#1976d2]",
+    className: "bg-[#e6f4f1] text-[#0f766e]",
   },
   {
-    label: "Demos",
+    label: "Escuchar demos",
+    caption: "Ideas recientes",
     icon: Headphones,
     href: "/projects",
-    className: "bg-[#e8f5e9] text-[#2e7d32]",
+    className: "bg-[#e8eefc] text-[#2563eb]",
   },
 ]
 
@@ -101,185 +104,216 @@ export function HomeDashboard() {
   }, [profile?.name, user?.displayName])
 
   if (loading) {
-    return <main className="mobile-shell px-5 py-10 text-[#1a1a1a]">Cargando...</main>
+    return <main className="app-container text-[#1a1a1a]">Cargando...</main>
   }
 
   if (!user) {
     return (
-      <main className="mobile-shell flex flex-col items-center justify-center px-5 py-16 text-center">
-        <h1 className="text-3xl font-bold text-[#1a1a1a]">AcordeHub</h1>
-        <p className="mt-3 text-sm text-[#2c2c2c]">
-          Inicia sesion para ver proyectos, musicos y tu perfil real.
-        </p>
-        <Button asChild className="mt-6 h-12 rounded-xl bg-[#1a1a1a] px-8 text-white">
-          <Link href="/login">Iniciar sesion</Link>
-        </Button>
+      <main className="app-container">
+        <section className="surface-panel mx-auto max-w-3xl rounded-[32px] p-8 text-center">
+          <p className="eyebrow">AcordeHub web</p>
+          <h1 className="mt-3 text-4xl font-black text-[#1a1a1a]">Tu red musical en un solo lugar</h1>
+          <p className="mx-auto mt-4 max-w-xl text-sm leading-6 text-[#5f6661]">
+            Inicia sesion para ver proyectos, descubrir musicos y mantener sincronizado tu perfil con la app mobile.
+          </p>
+          <Button asChild className="mt-7 h-12 rounded-2xl bg-[#1a1a1a] px-8 text-white">
+            <Link href="/login">Iniciar sesion</Link>
+          </Button>
+        </section>
       </main>
     )
   }
 
+  const demoProjects = projects.filter((project) => project.demoUri).length
+  const completedProfile = [
+    profile?.role,
+    profile?.location,
+    profile?.description,
+    profile?.genres?.length,
+    profile?.instruments?.length,
+  ].filter(Boolean).length
+
   return (
-    <main className="mobile-shell px-5 pb-28 pt-6 md:max-w-7xl md:px-8 md:pb-12">
-      <section className="flex items-center justify-between gap-4">
-        <div className="flex min-w-0 items-center gap-3">
-          <Avatar className="h-12 w-12 border border-[#1a1a1a]">
-            <AvatarImage src={profile?.photoUrl || user.photoURL || "/placeholder-user.jpg"} alt="Usuario" />
-            <AvatarFallback className="bg-[#fff1c8] text-[#1a1a1a]">
-              {getInitials(displayName, user.email)}
-            </AvatarFallback>
-          </Avatar>
-          <div className="min-w-0">
-            <h1 className="truncate text-lg font-bold text-[#1a1a1a]">Hola, {displayName}!</h1>
-            <p className="truncate text-xs font-medium text-[#2c2c2c]">Que vamos a crear hoy?</p>
+    <main className="app-container">
+      <section className="grid gap-5 lg:grid-cols-[1.35fr_0.65fr]">
+        <div className="surface-panel rounded-[32px] p-5 sm:p-7">
+          <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+            <div className="max-w-2xl">
+              <div className="flex items-center gap-3">
+                <Avatar className="h-14 w-14 border-4 border-white shadow-sm">
+                  <AvatarImage src={profile?.photoUrl || user.photoURL || "/placeholder-user.jpg"} alt="Usuario" />
+                  <AvatarFallback className="bg-[#f7c948] font-black text-[#1a1a1a]">
+                    {getInitials(displayName, user.email)}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <p className="eyebrow">Dashboard creativo</p>
+                  <h1 className="text-3xl font-black leading-tight text-[#1a1a1a] sm:text-4xl">
+                    Hola, {displayName}
+                  </h1>
+                </div>
+              </div>
+              <p className="mt-5 max-w-xl text-sm leading-6 text-[#5f6661]">
+                Administra tus proyectos, encuentra musicos compatibles y publica demos desde la misma base de datos de la app mobile.
+              </p>
+            </div>
+
+            <Button asChild className="h-12 rounded-2xl bg-[#1a1a1a] px-5 font-bold text-white">
+              <Link href="/projects">
+                <Plus className="mr-2 h-4 w-4" />
+                Nuevo proyecto
+              </Link>
+            </Button>
+          </div>
+
+          <div className="mt-7 grid gap-3 sm:grid-cols-3">
+            <Metric label="Tus proyectos" value={activeProjectsCount.toString()} tone="dark" />
+            <Metric label="Musicos visibles" value={musicians.length.toString()} tone="teal" />
+            <Metric label="Demos activas" value={demoProjects.toString()} tone="blue" />
           </div>
         </div>
-        <div className="flex gap-2 md:hidden">
-          <Button size="icon" variant="ghost" className="h-10 w-10 rounded-full">
-            <AlertCircle className="h-5 w-5" />
+
+        <aside className="soft-panel rounded-[32px] p-5">
+          <div className="flex items-center gap-3">
+            <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#1a1a1a] text-white">
+              <Sparkles className="h-5 w-5" />
+            </span>
+            <div>
+              <p className="text-sm font-black text-[#1a1a1a]">Perfil creativo</p>
+              <p className="text-xs text-[#5f6661]">{completedProfile}/5 secciones completas</p>
+            </div>
+          </div>
+          <div className="mt-5 h-2 overflow-hidden rounded-full bg-[#e7ebe6]">
+            <div
+              className="h-full rounded-full bg-[#f5a623]"
+              style={{ width: `${Math.min(100, completedProfile * 20)}%` }}
+            />
+          </div>
+          <p className="mt-4 text-sm leading-6 text-[#5f6661]">
+            Completar rol, generos e instrumentos mejora como apareces en busqueda.
+          </p>
+          <Button asChild variant="outline" className="mt-5 h-11 w-full rounded-2xl border-[#dfe4dd] bg-white">
+            <Link href="/profile">Mejorar perfil</Link>
           </Button>
-          <Button size="icon" variant="ghost" className="h-10 w-10 rounded-full">
-            <MessageCircle className="h-5 w-5" />
-          </Button>
-        </div>
+        </aside>
       </section>
 
-      <Link
-        href="/search"
-        className="mt-6 flex h-14 items-center gap-3 rounded-full bg-white px-5 text-sm text-[#666666] shadow-sm ring-1 ring-black/5 transition hover:ring-[#f5a623]/50"
-      >
-        <Search className="h-5 w-5" />
-        Buscar musicos, proyectos o demos...
-      </Link>
-
-      <section className="mt-6 grid grid-cols-3 gap-4">
+      <section className="mt-5 grid gap-3 md:grid-cols-3">
         {quickActions.map((action) => {
           const Icon = action.icon
           return (
-            <Link key={action.label} href={action.href} className="flex flex-col items-center gap-2">
-              <span className={`flex h-14 w-14 items-center justify-center rounded-2xl ${action.className}`}>
-                <Icon className="h-6 w-6" />
-              </span>
-              <span className="text-xs font-medium text-[#2c2c2c]">{action.label}</span>
+            <Link
+              key={action.label}
+              href={action.href}
+              className="surface-panel group rounded-[24px] p-4 transition-transform hover:-translate-y-0.5"
+            >
+              <div className="flex items-center gap-3">
+                <span className={`flex h-12 w-12 items-center justify-center rounded-2xl ${action.className}`}>
+                  <Icon className="h-5 w-5" />
+                </span>
+                <div className="min-w-0">
+                  <p className="font-black text-[#1a1a1a]">{action.label}</p>
+                  <p className="text-sm text-[#5f6661]">{action.caption}</p>
+                </div>
+                <ArrowRight className="ml-auto h-4 w-4 text-[#8a918c] transition-transform group-hover:translate-x-0.5" />
+              </div>
             </Link>
           )
         })}
       </section>
 
-      <section className="mt-8 grid grid-cols-2 gap-4">
-        <Card className="rounded-2xl border-[#eeeeee] bg-white shadow-none">
-          <CardContent className="p-4">
-            <p className="text-xs text-[#2c2c2c]">Proyectos</p>
-            <p className="mt-1 text-base font-bold text-[#1a1a1a]">{activeProjectsCount} Activos</p>
-          </CardContent>
-        </Card>
-        <Card className="rounded-2xl border-[#eeeeee] bg-white shadow-none">
-          <CardContent className="p-4">
-            <p className="text-xs text-[#2c2c2c]">Musicos</p>
-            <p className="mt-1 text-base font-bold text-[#1a1a1a]">{musicians.length} Disponibles</p>
-          </CardContent>
-        </Card>
-      </section>
-
-      <section className="mt-8">
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-lg font-bold text-[#1a1a1a]">Descubrir talentos</h2>
-          <Button variant="ghost" size="sm" asChild className="h-8 px-2 text-[#666666]">
-            <Link href="/search">
-              Ver
-              <ArrowRight className="ml-1 h-4 w-4" />
-            </Link>
-          </Button>
-        </div>
-        <div className="-mx-5 flex gap-3 overflow-x-auto px-5 pb-1 md:grid md:grid-cols-3 md:overflow-visible">
-          {musicians.slice(0, 6).map((musician) => (
-            <Card key={musician.uid} className="min-w-56 rounded-2xl border-[#eeeeee] bg-white shadow-none">
-              <CardContent className="p-4">
-                <div className="flex items-center gap-3">
-                  <Avatar className="h-12 w-12">
-                    <AvatarImage src={musician.photoUrl || undefined} />
-                    <AvatarFallback className="bg-[#fff1c8] text-[#1a1a1a]">
-                      {getInitials(musician.name, musician.email)}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <p className="font-semibold text-[#1a1a1a]">{musician.name || "Usuario"}</p>
-                    <p className="text-sm text-[#666666]">{musician.role || "Musico"}</p>
+      <section className="mt-6 grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
+        <div>
+          <SectionHeader title="Descubrir talentos" href="/search" />
+          <div className="grid gap-3 sm:grid-cols-2">
+            {musicians.slice(0, 4).map((musician) => (
+              <Card key={musician.uid} className="surface-panel rounded-[24px]">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-3">
+                    <Avatar className="h-12 w-12">
+                      <AvatarImage src={musician.photoUrl || undefined} />
+                      <AvatarFallback className="bg-[#e6f4f1] font-black text-[#0f766e]">
+                        {getInitials(musician.name, musician.email)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="min-w-0">
+                      <p className="truncate font-black text-[#1a1a1a]">{musician.name || "Usuario"}</p>
+                      <p className="truncate text-sm text-[#5f6661]">{musician.role || "Musico"}</p>
+                    </div>
                   </div>
-                </div>
-                <TagRow tags={musician.genres?.slice(0, 3) ?? []} />
-              </CardContent>
-            </Card>
-          ))}
-          {musicians.length === 0 && (
-            <Card className="min-w-56 rounded-2xl border-[#eeeeee] bg-white shadow-none">
-              <CardContent className="p-4 text-sm text-[#666666]">Todavia no hay otros musicos.</CardContent>
-            </Card>
-          )}
-        </div>
-      </section>
-
-      <section className="mt-8">
-        <div className="mb-2 flex items-center justify-between gap-3">
-          <div>
-            <h2 className="text-lg font-bold text-[#1a1a1a]">Proyectos destacados</h2>
-            <p className="text-xs text-[#2c2c2c]">Ideas recientes con demos para escuchar</p>
+                  <TagRow tags={musician.genres?.slice(0, 3) ?? []} />
+                </CardContent>
+              </Card>
+            ))}
+            {musicians.length === 0 && (
+              <EmptyPanel text="Todavia no hay otros musicos disponibles." />
+            )}
           </div>
-          <Button asChild size="icon" className="h-11 w-11 rounded-2xl bg-[#fad080] text-[#d4881a] hover:bg-[#f7c948]">
-            <Link href="/projects">
-              <FolderKanban className="h-5 w-5" />
-            </Link>
-          </Button>
         </div>
 
-        <div className="mb-4 flex gap-2 overflow-x-auto">
-          {["Todos", "Con demo", "Mios"].map((chip, index) => (
-            <Badge
-              key={chip}
-              className={
-                index === 0
-                  ? "rounded-full bg-[#1a1a1a] px-4 py-1.5 text-white hover:bg-[#1a1a1a]"
-                  : "rounded-full bg-white px-4 py-1.5 text-[#1a1a1a] hover:bg-white"
-              }
-            >
-              {chip}
-            </Badge>
-          ))}
-        </div>
-
-        <div className="space-y-3">
-          {projects.slice(0, 6).map((project) => (
-            <Card key={project.id} className="rounded-2xl border-[#eeeeee] bg-white shadow-none">
-              <CardContent className="p-4">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <h3 className="font-semibold text-[#1a1a1a]">{project.title}</h3>
-                    <p className="mt-1 text-sm text-[#666666]">{project.description}</p>
+        <div>
+          <SectionHeader title="Proyectos destacados" href="/projects" />
+          <div className="space-y-3">
+            {projects.slice(0, 5).map((project) => (
+              <Card key={project.id} className="surface-panel rounded-[24px]">
+                <CardContent className="flex gap-4 p-4">
+                  <span className="flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-2xl bg-[#fff3cf] text-[#c47a00]">
+                    <Mic2 className="h-5 w-5" />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h3 className="font-black text-[#1a1a1a]">{project.title}</h3>
+                      {project.demoUri && (
+                        <Badge className="rounded-full bg-[#e8eefc] text-[#2563eb] hover:bg-[#e8eefc]">
+                          Demo
+                        </Badge>
+                      )}
+                    </div>
+                    <p className="mt-1 line-clamp-2 text-sm text-[#5f6661]">{project.description}</p>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      <Badge variant="outline" className="rounded-full border-[#dfe4dd] bg-white">
+                        {project.genre}
+                      </Badge>
+                      <span className="text-xs font-semibold text-[#8a918c]">por {project.ownerName || "Usuario"}</span>
+                    </div>
                   </div>
-                  <Mic2 className="mt-1 h-5 w-5 shrink-0 text-[#f5a623]" />
-                </div>
-                <div className="mt-3 flex flex-wrap gap-1.5">
-                  {project.demoUri && (
-                    <Badge variant="outline" className="rounded-full border-[#fad080] text-[#2c2c2c]">
-                      Con demo
-                    </Badge>
-                  )}
-                  <Badge variant="outline" className="rounded-full border-[#fad080] text-[#2c2c2c]">
-                    {project.genre}
-                  </Badge>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-          {projects.length === 0 && (
-            <Card className="rounded-2xl border-[#eeeeee] bg-white shadow-none">
-              <CardContent className="p-4 text-sm text-[#666666]">
-                Todavia no hay proyectos publicados.
-              </CardContent>
-            </Card>
-          )}
+                </CardContent>
+              </Card>
+            ))}
+            {projects.length === 0 && <EmptyPanel text="Todavia no hay proyectos publicados." />}
+          </div>
         </div>
       </section>
     </main>
+  )
+}
+
+function Metric({ label, value, tone }: { label: string; value: string; tone: "dark" | "teal" | "blue" }) {
+  const toneClass = {
+    dark: "bg-[#1a1a1a] text-white",
+    teal: "bg-[#e6f4f1] text-[#0f766e]",
+    blue: "bg-[#e8eefc] text-[#2563eb]",
+  }[tone]
+
+  return (
+    <div className="rounded-2xl border border-[#dfe4dd] bg-[#fbfcf8] p-4">
+      <span className={`inline-flex rounded-xl px-3 py-1 text-xs font-black ${toneClass}`}>{value}</span>
+      <p className="mt-3 text-sm font-bold text-[#5f6661]">{label}</p>
+    </div>
+  )
+}
+
+function SectionHeader({ title, href }: { title: string; href: string }) {
+  return (
+    <div className="mb-3 flex items-center justify-between">
+      <h2 className="text-xl font-black text-[#1a1a1a]">{title}</h2>
+      <Button asChild variant="ghost" size="sm" className="rounded-xl text-[#5f6661]">
+        <Link href={href}>
+          Ver todo
+          <ArrowRight className="ml-1 h-4 w-4" />
+        </Link>
+      </Button>
+    </div>
   )
 }
 
@@ -287,12 +321,21 @@ function TagRow({ tags }: { tags: string[] }) {
   if (tags.length === 0) return null
 
   return (
-    <div className="mt-3 flex flex-wrap gap-1.5">
+    <div className="mt-4 flex flex-wrap gap-1.5">
       {tags.map((tag) => (
-        <Badge key={tag} variant="secondary" className="rounded-full bg-[#fff1c8] text-[#1a1a1a]">
+        <Badge key={tag} className="rounded-full bg-[#eef2f0] text-[#1a1a1a] hover:bg-[#eef2f0]">
           {tag}
         </Badge>
       ))}
+    </div>
+  )
+}
+
+function EmptyPanel({ text }: { text: string }) {
+  return (
+    <div className="soft-panel rounded-[24px] p-5 text-sm font-medium text-[#5f6661]">
+      <Wand2 className="mb-3 h-5 w-5 text-[#f5a623]" />
+      {text}
     </div>
   )
 }

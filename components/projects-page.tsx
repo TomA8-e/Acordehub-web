@@ -1,5 +1,6 @@
 "use client"
 
+import type { ComponentType } from "react"
 import { useEffect, useMemo, useState } from "react"
 import {
   addDoc,
@@ -14,7 +15,7 @@ import {
   updateDoc,
 } from "firebase/firestore"
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage"
-import { Calendar, Headphones, Plus, Users } from "lucide-react"
+import { Calendar, Headphones, ImageIcon, Mic2, Plus, Upload } from "lucide-react"
 import { useAuth } from "@/components/auth-provider"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
@@ -95,16 +96,7 @@ export function ProjectsPage() {
 
       const imageUri = cover ? await uploadProjectFile(user.uid, projectRef.id, "cover", cover) : ""
       const demoUri = await uploadProjectFile(user.uid, projectRef.id, "demo", demo)
-
-      await addDoc(collection(db, "projects", projectRef.id, "activity"), {
-        type: "created",
-        createdAt: serverTimestamp(),
-      }).catch(() => undefined)
-
-      await updateDoc(projectRef, {
-        imageUri,
-        demoUri,
-      })
+      await updateDoc(projectRef, { imageUri, demoUri })
 
       setTitle("")
       setDescription("")
@@ -121,178 +113,214 @@ export function ProjectsPage() {
   }
 
   if (loading) {
-    return <main className="mobile-shell px-5 py-10 text-[#1a1a1a]">Cargando...</main>
+    return <main className="app-container text-[#1a1a1a]">Cargando...</main>
   }
 
   if (!user) {
-    return (
-      <main className="mobile-shell px-5 py-10 text-center text-[#1a1a1a]">
-        Inicia sesion para ver y publicar proyectos.
-      </main>
-    )
+    return <main className="app-container text-center text-[#1a1a1a]">Inicia sesion para ver y publicar proyectos.</main>
   }
 
   return (
-    <main className="mobile-shell px-5 pb-28 pt-6 md:max-w-7xl md:px-8 md:pb-12">
-      <section className="mb-6 flex items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-[#1a1a1a] md:text-4xl">Proyectos</h1>
-          <p className="mt-1 text-sm text-[#2c2c2c]">Publica demos y encuentra colaboradores</p>
+    <main className="app-container">
+      <section className="surface-panel rounded-[32px] p-5 sm:p-7">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <p className="eyebrow">Proyectos</p>
+            <h1 className="mt-2 text-3xl font-black text-[#1a1a1a] sm:text-4xl">Publica y encuentra colaboraciones</h1>
+            <p className="mt-3 max-w-2xl text-sm leading-6 text-[#5f6661]">
+              Sube demos, muestra ideas en progreso y deja que otros musicos descubran donde pueden sumarse.
+            </p>
+          </div>
+          <Button
+            onClick={() => setShowForm((value) => !value)}
+            className="h-12 rounded-2xl bg-[#1a1a1a] px-5 font-bold text-white"
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            {showForm ? "Cerrar" : "Crear proyecto"}
+          </Button>
         </div>
-        <Button
-          onClick={() => setShowForm((value) => !value)}
-          className="h-11 rounded-2xl bg-[#1a1a1a] px-4 text-white hover:bg-[#2c2c2c]"
-        >
-          <Plus className="mr-2 h-4 w-4" />
-          Crear
-        </Button>
+
+        <div className="mt-6 grid gap-3 sm:grid-cols-3">
+          <Metric label="Mis proyectos" value={myProjects.length.toString()} />
+          <Metric label="Publicados" value={projects.length.toString()} />
+          <Metric label="Con demo" value={projects.filter((project) => project.demoUri).length.toString()} />
+        </div>
       </section>
 
       {message && (
-        <p className="mb-4 rounded-2xl bg-white px-4 py-3 text-sm font-medium text-[#2c2c2c]">
+        <p className="mt-4 rounded-2xl border border-[#dfe4dd] bg-white px-4 py-3 text-sm font-bold text-[#5f6661]">
           {message}
         </p>
       )}
 
       {showForm && (
-        <Card className="mb-6 rounded-2xl border-[#eeeeee] bg-white shadow-none">
-          <CardContent className="p-4">
-            <form onSubmit={publishProject} className="space-y-4">
+        <section className="surface-panel mt-5 rounded-[28px] p-5 sm:p-6">
+          <form onSubmit={publishProject} className="grid gap-5 lg:grid-cols-[1fr_360px]">
+            <div className="space-y-4">
               <Input
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="Titulo del proyecto"
                 maxLength={120}
-                className="h-12 rounded-xl border-[#ead8aa] text-[#1a1a1a]"
+                className="h-12 rounded-2xl border-[#dfe4dd] bg-[#fbfcf8] text-[#1a1a1a]"
               />
               <Textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Descripcion"
+                placeholder="Descripcion del sonido, integrantes buscados o estado de la idea"
                 maxLength={2000}
-                className="min-h-28 rounded-xl border-[#ead8aa] text-[#1a1a1a]"
+                className="min-h-32 rounded-2xl border-[#dfe4dd] bg-[#fbfcf8] text-[#1a1a1a]"
               />
               <Input
                 value={genre}
                 onChange={(e) => setGenre(e.target.value)}
                 placeholder="Genero"
                 maxLength={80}
-                className="h-12 rounded-xl border-[#ead8aa] text-[#1a1a1a]"
+                className="h-12 rounded-2xl border-[#dfe4dd] bg-[#fbfcf8] text-[#1a1a1a]"
               />
-              <div className="grid gap-3 md:grid-cols-2">
-                <label className="rounded-xl border border-[#ead8aa] bg-[#fff8e7] p-3 text-sm text-[#2c2c2c]">
-                  Portada opcional
-                  <Input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => setCover(e.target.files?.[0] ?? null)}
-                    className="mt-2 bg-white"
-                  />
-                </label>
-                <label className="rounded-xl border border-[#ead8aa] bg-[#fff8e7] p-3 text-sm text-[#2c2c2c]">
-                  Demo MP3/WAV
-                  <Input
-                    type="file"
-                    accept="audio/mpeg,audio/mp3,audio/wav,audio/x-wav"
-                    onChange={(e) => setDemo(e.target.files?.[0] ?? null)}
-                    className="mt-2 bg-white"
-                    required
-                  />
-                </label>
-              </div>
-              <Button disabled={saving} className="h-12 w-full rounded-xl bg-[#1a1a1a] text-white">
+            </div>
+
+            <div className="space-y-3">
+              <FileField
+                icon={ImageIcon}
+                label="Portada opcional"
+                helper={cover?.name || "Imagen para identificar el proyecto"}
+                accept="image/*"
+                onChange={setCover}
+              />
+              <FileField
+                icon={Mic2}
+                label="Demo MP3/WAV"
+                helper={demo?.name || "Archivo requerido para publicar"}
+                accept="audio/mpeg,audio/mp3,audio/wav,audio/x-wav"
+                onChange={setDemo}
+                required
+              />
+              <Button disabled={saving} className="h-12 w-full rounded-2xl bg-[#1a1a1a] font-bold text-white">
                 {saving ? "Publicando..." : "Publicar proyecto"}
               </Button>
-            </form>
-          </CardContent>
-        </Card>
+            </div>
+          </form>
+        </section>
       )}
 
-      <section className="mb-6 grid grid-cols-2 gap-4">
-        <Card className="rounded-2xl border-[#eeeeee] bg-white shadow-none">
-          <CardContent className="p-4">
-            <p className="text-xs text-[#2c2c2c]">Mis proyectos</p>
-            <p className="mt-1 text-base font-bold text-[#1a1a1a]">{myProjects.length} Activos</p>
-          </CardContent>
-        </Card>
-        <Card className="rounded-2xl border-[#eeeeee] bg-white shadow-none">
-          <CardContent className="p-4">
-            <p className="text-xs text-[#2c2c2c]">Publicados</p>
-            <p className="mt-1 text-base font-bold text-[#1a1a1a]">{projects.length} Totales</p>
-          </CardContent>
-        </Card>
-      </section>
-
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <section className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {projects.map((project) => (
-          <Card key={project.id} className="rounded-2xl border-[#eeeeee] bg-white shadow-none">
-            <CardContent className="p-4">
-              {project.imageUri && (
+          <Card key={project.id} className="surface-panel overflow-hidden rounded-[28px]">
+            <CardContent className="p-0">
+              {project.imageUri ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={project.imageUri}
-                  alt={project.title}
-                  className="mb-4 h-40 w-full rounded-xl object-cover"
-                />
+                <img src={project.imageUri} alt={project.title} className="h-44 w-full object-cover" />
+              ) : (
+                <div className="flex h-44 items-center justify-center bg-[#eef2f0] text-[#8a918c]">
+                  <FolderArtwork />
+                </div>
               )}
-              <div className="mb-3 flex items-start justify-between gap-3">
-                <div>
-                  <h2 className="font-bold text-[#1a1a1a]">{project.title}</h2>
-                  <p className="mt-1 text-sm text-[#666666]">{project.description}</p>
-                </div>
-                <Badge className="rounded-full bg-[#fff1c8] text-[#1a1a1a] hover:bg-[#fff1c8]">
-                  {project.status || "active"}
-                </Badge>
-              </div>
 
-              <div className="mb-4 flex flex-wrap gap-1.5">
-                <Badge variant="outline" className="rounded-full border-[#fad080] text-[#2c2c2c]">
-                  {project.genre}
-                </Badge>
-                {project.demoUri && (
-                  <Badge variant="outline" className="rounded-full border-[#fad080] text-[#2c2c2c]">
-                    Con demo
+              <div className="p-5">
+                <div className="mb-3 flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <h2 className="line-clamp-1 font-black text-[#1a1a1a]">{project.title}</h2>
+                    <p className="mt-1 line-clamp-2 text-sm leading-6 text-[#5f6661]">{project.description}</p>
+                  </div>
+                  <Badge className="rounded-full bg-[#e6f4f1] text-[#0f766e] hover:bg-[#e6f4f1]">
+                    Activo
                   </Badge>
-                )}
-              </div>
-
-              <div className="flex items-center justify-between border-t border-[#eeeeee] pt-4">
-                <div className="flex items-center gap-2">
-                  <Users className="h-4 w-4 text-[#666666]" />
-                  <Avatar className="h-7 w-7 border-2 border-white">
-                    <AvatarFallback className="bg-[#fff1c8] text-[10px] text-[#1a1a1a]">
-                      {getInitials(project.ownerName)}
-                    </AvatarFallback>
-                  </Avatar>
-                  <span className="text-xs text-[#666666]">{project.ownerName || "Usuario"}</span>
                 </div>
-                <div className="flex items-center gap-2">
+
+                <div className="mb-5 flex flex-wrap gap-2">
+                  <Badge variant="outline" className="rounded-full border-[#dfe4dd] bg-white">
+                    {project.genre}
+                  </Badge>
                   {project.demoUri && (
-                    <Button asChild size="icon" variant="ghost" className="h-8 w-8 rounded-full">
-                      <a href={project.demoUri} target="_blank" rel="noreferrer" aria-label="Escuchar demo">
-                        <Headphones className="h-4 w-4" />
-                      </a>
-                    </Button>
+                    <Badge className="rounded-full bg-[#e8eefc] text-[#2563eb] hover:bg-[#e8eefc]">
+                      Demo
+                    </Badge>
                   )}
-                  <div className="flex items-center gap-1 text-xs text-[#666666]">
-                    <Calendar className="h-3.5 w-3.5" />
-                    {formatDate(project.createdAt)}
+                </div>
+
+                <div className="flex items-center justify-between border-t border-[#dfe4dd] pt-4">
+                  <div className="flex min-w-0 items-center gap-2">
+                    <Avatar className="h-8 w-8">
+                      <AvatarFallback className="bg-[#fff3cf] text-xs font-black text-[#c47a00]">
+                        {getInitials(project.ownerName)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="truncate text-xs font-bold text-[#5f6661]">{project.ownerName || "Usuario"}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {project.demoUri && (
+                      <Button asChild size="icon" variant="ghost" className="h-9 w-9 rounded-xl">
+                        <a href={project.demoUri} target="_blank" rel="noreferrer" aria-label="Escuchar demo">
+                          <Headphones className="h-4 w-4" />
+                        </a>
+                      </Button>
+                    )}
+                    <span className="flex items-center gap-1 text-xs font-semibold text-[#8a918c]">
+                      <Calendar className="h-3.5 w-3.5" />
+                      {formatDate(project.createdAt)}
+                    </span>
                   </div>
                 </div>
               </div>
             </CardContent>
           </Card>
         ))}
-      </div>
+      </section>
 
       {projects.length === 0 && (
-        <Card className="rounded-2xl border-[#eeeeee] bg-white shadow-none">
-          <CardContent className="p-6 text-center text-sm text-[#666666]">
-            Todavia no hay proyectos publicados.
-          </CardContent>
-        </Card>
+        <div className="soft-panel mt-6 rounded-[28px] p-8 text-center text-sm font-medium text-[#5f6661]">
+          Todavia no hay proyectos publicados.
+        </div>
       )}
     </main>
+  )
+}
+
+function Metric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-2xl border border-[#dfe4dd] bg-[#fbfcf8] p-4">
+      <p className="text-2xl font-black text-[#1a1a1a]">{value}</p>
+      <p className="mt-1 text-sm font-bold text-[#5f6661]">{label}</p>
+    </div>
+  )
+}
+
+function FileField({
+  icon: Icon,
+  label,
+  helper,
+  accept,
+  onChange,
+  required,
+}: {
+  icon: ComponentType<{ className?: string }>
+  label: string
+  helper: string
+  accept: string
+  onChange: (file: File | null) => void
+  required?: boolean
+}) {
+  return (
+    <label className="block rounded-2xl border border-[#dfe4dd] bg-[#fbfcf8] p-4">
+      <span className="flex items-center gap-3">
+        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-[#1a1a1a]">
+          <Icon className="h-5 w-5" />
+        </span>
+        <span className="min-w-0">
+          <span className="block text-sm font-black text-[#1a1a1a]">{label}</span>
+          <span className="block truncate text-xs text-[#5f6661]">{helper}</span>
+        </span>
+        <Upload className="ml-auto h-4 w-4 text-[#8a918c]" />
+      </span>
+      <Input
+        type="file"
+        accept={accept}
+        onChange={(e) => onChange(e.target.files?.[0] ?? null)}
+        className="sr-only"
+        required={required}
+      />
+    </label>
   )
 }
 
@@ -345,4 +373,12 @@ function getInitials(name?: string | null) {
     .slice(0, 2)
     .map((part) => part[0]?.toUpperCase())
     .join("") || "U"
+}
+
+function FolderArtwork() {
+  return (
+    <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-white">
+      <Mic2 className="h-7 w-7" />
+    </div>
+  )
 }

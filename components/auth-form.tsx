@@ -10,7 +10,7 @@ import {
   signInWithPopup,
 } from "firebase/auth"
 import { doc, getDoc, serverTimestamp, setDoc } from "firebase/firestore"
-import { Eye, EyeOff } from "lucide-react"
+import { Eye, EyeOff, Music2, ShieldCheck, Sparkles } from "lucide-react"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -89,26 +89,69 @@ export function AuthForm({ mode }: AuthFormProps) {
   }
 
   return (
-    <main className="acorde-gradient flex min-h-screen items-center justify-center px-6 py-10">
-      <section className="w-full max-w-md">
-        <div className="flex flex-col items-center text-center">
-          {!isLogin && (
-            <h1 className="mb-2 text-3xl font-bold text-[#1a1a1a]">Crear cuenta</h1>
-          )}
-          <Image
-            src="/acordehub.png"
-            alt="AcordeHub"
-            width={isLogin ? 220 : 148}
-            height={isLogin ? 220 : 148}
-            priority
-            className="object-contain"
-          />
-          <p className="mb-8 text-sm font-medium text-[#2c2c2c]">
-            {isLogin ? "Conecta con musicos" : "Completa tus datos para empezar"}
-          </p>
+    <main className="acorde-gradient min-h-screen px-4 py-6 sm:px-6 lg:px-8">
+      <section className="mx-auto grid min-h-[calc(100vh-3rem)] max-w-6xl items-center gap-6 lg:grid-cols-[1.05fr_0.95fr]">
+        <div className="hidden min-h-[680px] flex-col justify-between rounded-[32px] bg-[#1a1a1a] p-8 text-white shadow-[0_24px_80px_rgba(26,26,26,0.28)] lg:flex">
+          <div>
+            <div className="flex items-center gap-3">
+              <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white">
+                <Image src="/acordehub.png" alt="AcordeHub" width={44} height={44} priority />
+              </span>
+              <div>
+                <p className="text-xl font-black">AcordeHub</p>
+                <p className="text-xs font-bold uppercase tracking-[0.18em] text-white/55">Creative network</p>
+              </div>
+            </div>
+
+            <div className="mt-20 max-w-lg">
+              <p className="eyebrow text-[#f7c948]">Musica colaborativa</p>
+              <h1 className="mt-4 text-5xl font-black leading-[1.02]">
+                Crea, publica demos y conecta con otros musicos.
+              </h1>
+              <p className="mt-5 text-base leading-7 text-white/68">
+                Una experiencia web pensada para seguir el flujo de la app mobile: perfil,
+                proyectos, busqueda y colaboracion desde el mismo Firebase.
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-3 gap-3">
+            {[
+              { icon: Music2, label: "Demos" },
+              { icon: Sparkles, label: "Matches" },
+              { icon: ShieldCheck, label: "Firebase" },
+            ].map((item) => {
+              const Icon = item.icon
+              return (
+                <div key={item.label} className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                  <Icon className="h-5 w-5 text-[#f7c948]" />
+                  <p className="mt-3 text-sm font-bold">{item.label}</p>
+                </div>
+              )
+            })}
+          </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="mx-auto w-full max-w-md rounded-[28px] border border-white/70 bg-white/88 p-5 shadow-[0_24px_70px_rgba(26,26,26,0.16)] backdrop-blur-xl sm:p-7">
+          <div className="mb-8 text-center">
+            <Image
+              src="/acordehub.png"
+              alt="AcordeHub"
+              width={104}
+              height={104}
+              priority
+              className="mx-auto object-contain"
+            />
+            <p className="eyebrow mt-4">AcordeHub</p>
+            <h1 className="mt-2 text-3xl font-black text-[#1a1a1a]">
+              {isLogin ? "Bienvenido de vuelta" : "Crea tu cuenta"}
+            </h1>
+            <p className="mt-2 text-sm font-medium text-[#5f6661]">
+              {isLogin ? "Entra para continuar tus proyectos." : "Completa tus datos para empezar a colaborar."}
+            </p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
           <FieldGroup>
             {!isLogin && (
               <Field>
@@ -120,7 +163,7 @@ export function AuthForm({ mode }: AuthFormProps) {
                   placeholder="Tu nombre"
                   value={formData.name}
                   onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
-                  className="h-14 rounded-[14px] border-0 bg-white/95 text-[#1a1a1a] shadow-sm placeholder:text-[#666666]"
+                  className="h-[52px] rounded-2xl border-[#dfe4dd] bg-[#fbfcf8] text-[#1a1a1a] shadow-none placeholder:text-[#8a918c]"
                   required
                 />
               </Field>
@@ -136,7 +179,7 @@ export function AuthForm({ mode }: AuthFormProps) {
                 placeholder="tu@email.com"
                 value={formData.email}
                 onChange={(e) => setFormData((prev) => ({ ...prev, email: e.target.value }))}
-                className="h-14 rounded-[14px] border-0 bg-white/95 text-[#1a1a1a] shadow-sm placeholder:text-[#666666]"
+                className="h-[52px] rounded-2xl border-[#dfe4dd] bg-[#fbfcf8] text-[#1a1a1a] shadow-none placeholder:text-[#8a918c]"
                 required
               />
             </Field>
@@ -152,7 +195,7 @@ export function AuthForm({ mode }: AuthFormProps) {
                   placeholder="********"
                   value={formData.password}
                   onChange={(e) => setFormData((prev) => ({ ...prev, password: e.target.value }))}
-                  className="h-14 rounded-[14px] border-0 bg-white/95 pr-12 text-[#1a1a1a] shadow-sm placeholder:text-[#666666]"
+                  className="h-[52px] rounded-2xl border-[#dfe4dd] bg-[#fbfcf8] pr-12 text-[#1a1a1a] shadow-none placeholder:text-[#8a918c]"
                   required
                 />
                 <button
@@ -176,7 +219,7 @@ export function AuthForm({ mode }: AuthFormProps) {
           <Button
             type="submit"
             disabled={loading}
-            className="h-14 w-full rounded-[14px] bg-[#1a1a1a] text-base text-white hover:bg-[#2c2c2c]"
+            className="h-[52px] w-full rounded-2xl bg-[#1a1a1a] text-base font-bold text-white shadow-[0_12px_28px_rgba(26,26,26,0.18)] hover:bg-[#2c2c2c]"
           >
             {loading ? "Procesando..." : isLogin ? "Iniciar sesion" : "Crear cuenta"}
           </Button>
@@ -194,7 +237,7 @@ export function AuthForm({ mode }: AuthFormProps) {
                 variant="outline"
                 disabled={loading}
                 onClick={handleGoogle}
-                className="h-14 w-full rounded-[14px] border-[#1a1a1a] bg-white text-[#1a1a1a] hover:bg-white/90"
+                className="h-[52px] w-full rounded-2xl border-[#dfe4dd] bg-white font-bold text-[#1a1a1a] hover:bg-[#f5f6f2]"
               >
                 Continuar con Google
               </Button>
@@ -202,7 +245,7 @@ export function AuthForm({ mode }: AuthFormProps) {
           )}
         </form>
 
-        <div className="mt-8 text-center text-sm text-[#2c2c2c]">
+          <div className="mt-8 text-center text-sm text-[#5f6661]">
           {isLogin ? (
             <p>
               No tenes cuenta?{" "}
@@ -218,6 +261,7 @@ export function AuthForm({ mode }: AuthFormProps) {
               </Link>
             </p>
           )}
+          </div>
         </div>
       </section>
     </main>
