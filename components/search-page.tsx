@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
+import Link from "next/link"
 import { collection, limit, onSnapshot, query } from "firebase/firestore"
 import { ArrowRight, Filter, MapPin, Search, SlidersHorizontal, UserRound, X } from "lucide-react"
 import { useAuth } from "@/components/auth-provider"
@@ -10,9 +11,9 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { db } from "@/lib/firebase"
-import type { UserProfile } from "@/lib/acordehub-types"
+import { getAccountTypeLabel, type UserProfile } from "@/lib/acordehub-types"
 
-const chips = ["Rock", "Pop", "Jazz", "Voz", "Guitarra", "Productor"]
+const chips = ["Musico", "Productor", "Rock", "Pop", "Jazz", "Voz", "Guitarra"]
 
 export function SearchPage() {
   const { user, loading } = useAuth()
@@ -39,6 +40,7 @@ export function SearchPage() {
       const haystack = [
         musician.name,
         musician.email,
+        getAccountTypeLabel(musician.accountType),
         musician.role,
         musician.location,
         musician.description,
@@ -53,6 +55,7 @@ export function SearchPage() {
       const chip = activeChip.toLowerCase()
       const matchesChip =
         !activeChip ||
+        getAccountTypeLabel(musician.accountType).toLowerCase() === chip ||
         musician.role?.toLowerCase().includes(chip) ||
         musician.genres?.some((genre) => genre.toLowerCase() === chip) ||
         musician.instruments?.some((instrument) => instrument.toLowerCase() === chip)
@@ -71,39 +74,39 @@ export function SearchPage() {
 
   return (
     <main className="app-container">
-      <section className="surface-panel rounded-[32px] p-5 sm:p-7">
+      <section className="surface-panel rounded-[32px] p-5 sm:p-7 lg:rounded-lg lg:p-8">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <p className="eyebrow">Explorar</p>
-            <h1 className="mt-2 text-3xl font-black text-[#1a1a1a] sm:text-4xl">Encuentra tu proxima colaboracion</h1>
+            <h1 className="mt-2 text-3xl font-black text-[#1a1a1a] sm:text-4xl lg:text-[42px]">Encuentra tu proxima colaboracion</h1>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-[#5f6661]">
               Filtra por instrumento, genero, rol o ciudad para descubrir perfiles compatibles con tus proyectos.
             </p>
           </div>
-          <div className="rounded-2xl border border-[#dfe4dd] bg-[#fbfcf8] px-4 py-3">
+          <div className="rounded-2xl border border-[#dfe4dd] bg-[#fbfcf8] px-4 py-3 lg:min-w-40 lg:rounded-lg">
             <p className="text-2xl font-black text-[#1a1a1a]">{filteredMusicians.length}</p>
             <p className="text-xs font-bold uppercase tracking-[0.14em] text-[#5f6661]">resultados</p>
           </div>
         </div>
 
-        <div className="mt-6 grid gap-3 lg:grid-cols-[1fr_auto]">
+        <div className="mt-6 grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto]">
           <div className="relative">
             <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#8a918c]" />
             <Input
               value={queryText}
               onChange={(e) => setQueryText(e.target.value)}
               placeholder="Buscar por nombre, rol, genero o instrumento"
-              className="h-14 rounded-2xl border-[#dfe4dd] bg-white pl-12 text-[#1a1a1a] shadow-none placeholder:text-[#8a918c]"
+              className="h-14 rounded-2xl border-[#dfe4dd] bg-white pl-12 text-[#1a1a1a] shadow-none placeholder:text-[#8a918c] lg:rounded-md"
             />
           </div>
-          <Button variant="outline" className="h-14 rounded-2xl border-[#dfe4dd] bg-white px-5 font-bold">
+          <Button variant="outline" className="h-14 rounded-2xl border-[#dfe4dd] bg-white px-5 font-bold lg:rounded-md">
             <SlidersHorizontal className="mr-2 h-4 w-4" />
             Filtros
           </Button>
         </div>
       </section>
 
-      <section className="mt-5 flex gap-2 overflow-x-auto pb-1">
+      <section className="mt-5 flex gap-2 overflow-x-auto pb-1 lg:flex-wrap lg:overflow-visible">
         {chips.map((chip) => {
           const active = chip === activeChip
           return (
@@ -113,8 +116,8 @@ export function SearchPage() {
               onClick={() => setActiveChip(active ? "" : chip)}
               className={
                 active
-                  ? "flex h-10 items-center gap-1 rounded-full bg-[#1a1a1a] px-4 text-sm font-black text-white"
-                  : "h-10 rounded-full border border-[#dfe4dd] bg-white px-4 text-sm font-black text-[#5f6661]"
+                  ? "flex h-10 items-center gap-1 rounded-full bg-[#1a1a1a] px-4 text-sm font-black text-white lg:rounded-md"
+                  : "h-10 rounded-full border border-[#dfe4dd] bg-white px-4 text-sm font-black text-[#5f6661] lg:rounded-md"
               }
             >
               {chip}
@@ -124,10 +127,10 @@ export function SearchPage() {
         })}
       </section>
 
-      <section className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+      <section className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         {filteredMusicians.map((musician) => (
-          <Card key={musician.uid} className="surface-panel rounded-[28px]">
-            <CardContent className="p-5">
+          <Card key={musician.uid} className="surface-panel rounded-[28px] lg:rounded-lg">
+            <CardContent className="p-5 lg:p-4">
               <div className="flex items-start gap-4">
                 <Avatar className="h-16 w-16 border-4 border-white shadow-sm">
                   <AvatarImage src={musician.photoUrl || undefined} />
@@ -137,7 +140,9 @@ export function SearchPage() {
                 </Avatar>
                 <div className="min-w-0 flex-1">
                   <h2 className="truncate text-lg font-black text-[#1a1a1a]">{musician.name || "Usuario"}</h2>
-                  <p className="text-sm font-bold text-[#5f6661]">{musician.role || "Musico"}</p>
+                  <p className="text-sm font-bold text-[#5f6661]">
+                    {getAccountTypeLabel(musician.accountType)}{musician.role ? ` · ${musician.role}` : ""}
+                  </p>
                   <p className="mt-1 flex items-center gap-1 text-xs font-semibold text-[#8a918c]">
                     <MapPin className="h-3.5 w-3.5" />
                     {musician.location || "Sin ubicacion"}
@@ -151,16 +156,18 @@ export function SearchPage() {
 
               <div className="mt-4 flex flex-wrap gap-1.5">
                 {[...(musician.genres ?? []), ...(musician.instruments ?? [])].slice(0, 5).map((tag) => (
-                  <Badge key={tag} className="rounded-full bg-[#eef2f0] text-[#1a1a1a] hover:bg-[#eef2f0]">
+                  <Badge key={tag} className="rounded-full bg-[#eef2f0] text-[#1a1a1a] hover:bg-[#eef2f0] lg:rounded-md">
                     {tag}
                   </Badge>
                 ))}
               </div>
 
-              <Button variant="outline" className="mt-5 h-11 w-full rounded-2xl border-[#dfe4dd] bg-white font-bold">
-                <UserRound className="mr-2 h-4 w-4" />
-                Ver perfil
-                <ArrowRight className="ml-auto h-4 w-4 text-[#8a918c]" />
+              <Button asChild variant="outline" className="mt-5 h-11 w-full rounded-2xl border-[#dfe4dd] bg-white font-bold lg:rounded-md">
+                <Link href={`/profile/${musician.uid}`}>
+                  <UserRound className="mr-2 h-4 w-4" />
+                  Ver perfil
+                  <ArrowRight className="ml-auto h-4 w-4 text-[#8a918c]" />
+                </Link>
               </Button>
             </CardContent>
           </Card>
@@ -168,7 +175,7 @@ export function SearchPage() {
       </section>
 
       {filteredMusicians.length === 0 && (
-        <div className="soft-panel mt-6 rounded-[28px] p-8 text-center">
+        <div className="soft-panel mt-6 rounded-[28px] p-8 text-center lg:rounded-lg">
           <Filter className="mx-auto h-8 w-8 text-[#f5a623]" />
           <p className="mt-3 font-black text-[#1a1a1a]">No encontramos resultados</p>
           <p className="mt-1 text-sm text-[#5f6661]">Prueba con otro genero, rol o instrumento.</p>

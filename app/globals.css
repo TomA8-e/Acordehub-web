@@ -134,11 +134,11 @@
   }
 
   .app-container {
-    @apply mx-auto w-full max-w-7xl px-4 pb-28 pt-6 sm:px-6 lg:px-8 lg:pb-12;
+    @apply mx-auto w-full max-w-7xl px-4 pb-28 pt-6 sm:px-6 lg:px-10 lg:pb-14 lg:pt-8 xl:px-12;
   }
 
   .surface-panel {
-    @apply border border-[#dfe4dd] bg-white shadow-[0_18px_50px_rgba(26,26,26,0.08)];
+    @apply border border-[#dfe4dd] bg-white shadow-[0_18px_50px_rgba(26,26,26,0.08)] lg:shadow-sm;
   }
 
   .soft-panel {

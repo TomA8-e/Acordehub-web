@@ -3,7 +3,7 @@ import { ProfilePage } from "@/components/profile-page"
 
 export default function Profile() {
   return (
-    <div className="min-h-screen bg-[#050505]">
+    <div className="min-h-screen bg-[#050505] md:bg-background">
       <Navbar />
       <ProfilePage />
     </div>

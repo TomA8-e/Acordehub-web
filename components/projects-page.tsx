@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import type { ComponentType } from "react"
 import { useEffect, useMemo, useState } from "react"
 import {
@@ -122,25 +123,25 @@ export function ProjectsPage() {
 
   return (
     <main className="app-container">
-      <section className="surface-panel rounded-[32px] p-5 sm:p-7">
+      <section className="surface-panel rounded-[32px] p-5 sm:p-7 lg:rounded-lg lg:p-8">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <p className="eyebrow">Proyectos</p>
-            <h1 className="mt-2 text-3xl font-black text-[#1a1a1a] sm:text-4xl">Publica y encuentra colaboraciones</h1>
+            <h1 className="mt-2 text-3xl font-black text-[#1a1a1a] sm:text-4xl lg:text-[42px]">Publica y encuentra colaboraciones</h1>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-[#5f6661]">
               Sube demos, muestra ideas en progreso y deja que otros musicos descubran donde pueden sumarse.
             </p>
           </div>
           <Button
             onClick={() => setShowForm((value) => !value)}
-            className="h-12 rounded-2xl bg-[#1a1a1a] px-5 font-bold text-white"
+            className="h-12 rounded-2xl bg-[#1a1a1a] px-5 font-bold text-white lg:rounded-md"
           >
             <Plus className="mr-2 h-4 w-4" />
             {showForm ? "Cerrar" : "Crear proyecto"}
           </Button>
         </div>
 
-        <div className="mt-6 grid gap-3 sm:grid-cols-3">
+        <div className="mt-6 grid gap-3 sm:grid-cols-3 lg:max-w-3xl lg:gap-4">
           <Metric label="Mis proyectos" value={myProjects.length.toString()} />
           <Metric label="Publicados" value={projects.length.toString()} />
           <Metric label="Con demo" value={projects.filter((project) => project.demoUri).length.toString()} />
@@ -148,13 +149,13 @@ export function ProjectsPage() {
       </section>
 
       {message && (
-        <p className="mt-4 rounded-2xl border border-[#dfe4dd] bg-white px-4 py-3 text-sm font-bold text-[#5f6661]">
+        <p className="mt-4 rounded-2xl border border-[#dfe4dd] bg-white px-4 py-3 text-sm font-bold text-[#5f6661] lg:rounded-lg">
           {message}
         </p>
       )}
 
       {showForm && (
-        <section className="surface-panel mt-5 rounded-[28px] p-5 sm:p-6">
+        <section className="surface-panel mt-5 rounded-[28px] p-5 sm:p-6 lg:rounded-lg lg:p-6">
           <form onSubmit={publishProject} className="grid gap-5 lg:grid-cols-[1fr_360px]">
             <div className="space-y-4">
               <Input
@@ -162,21 +163,21 @@ export function ProjectsPage() {
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="Titulo del proyecto"
                 maxLength={120}
-                className="h-12 rounded-2xl border-[#dfe4dd] bg-[#fbfcf8] text-[#1a1a1a]"
+                className="h-12 rounded-2xl border-[#dfe4dd] bg-[#fbfcf8] text-[#1a1a1a] lg:rounded-md"
               />
               <Textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Descripcion del sonido, integrantes buscados o estado de la idea"
                 maxLength={2000}
-                className="min-h-32 rounded-2xl border-[#dfe4dd] bg-[#fbfcf8] text-[#1a1a1a]"
+                className="min-h-32 rounded-2xl border-[#dfe4dd] bg-[#fbfcf8] text-[#1a1a1a] lg:rounded-md"
               />
               <Input
                 value={genre}
                 onChange={(e) => setGenre(e.target.value)}
                 placeholder="Genero"
                 maxLength={80}
-                className="h-12 rounded-2xl border-[#dfe4dd] bg-[#fbfcf8] text-[#1a1a1a]"
+                className="h-12 rounded-2xl border-[#dfe4dd] bg-[#fbfcf8] text-[#1a1a1a] lg:rounded-md"
               />
             </div>
 
@@ -196,7 +197,7 @@ export function ProjectsPage() {
                 onChange={setDemo}
                 required
               />
-              <Button disabled={saving} className="h-12 w-full rounded-2xl bg-[#1a1a1a] font-bold text-white">
+              <Button disabled={saving} className="h-12 w-full rounded-2xl bg-[#1a1a1a] font-bold text-white lg:rounded-md">
                 {saving ? "Publicando..." : "Publicar proyecto"}
               </Button>
             </div>
@@ -204,20 +205,20 @@ export function ProjectsPage() {
         </section>
       )}
 
-      <section className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+      <section className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         {projects.map((project) => (
-          <Card key={project.id} className="surface-panel overflow-hidden rounded-[28px]">
+          <Card key={project.id} className="surface-panel overflow-hidden rounded-[28px] lg:rounded-lg">
             <CardContent className="p-0">
               {project.imageUri ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={project.imageUri} alt={project.title} className="h-44 w-full object-cover" />
+                <img src={project.imageUri} alt={project.title} className="h-44 w-full object-cover lg:h-36" />
               ) : (
-                <div className="flex h-44 items-center justify-center bg-[#eef2f0] text-[#8a918c]">
+                <div className="flex h-44 items-center justify-center bg-[#eef2f0] text-[#8a918c] lg:h-36">
                   <FolderArtwork />
                 </div>
               )}
 
-              <div className="p-5">
+              <div className="p-5 lg:p-4">
                 <div className="mb-3 flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <h2 className="line-clamp-1 font-black text-[#1a1a1a]">{project.title}</h2>
@@ -240,14 +241,14 @@ export function ProjectsPage() {
                 </div>
 
                 <div className="flex items-center justify-between border-t border-[#dfe4dd] pt-4">
-                  <div className="flex min-w-0 items-center gap-2">
+                  <Link href={`/profile/${project.ownerUid}`} className="flex min-w-0 items-center gap-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#f5a623]">
                     <Avatar className="h-8 w-8">
                       <AvatarFallback className="bg-[#fff3cf] text-xs font-black text-[#c47a00]">
                         {getInitials(project.ownerName)}
                       </AvatarFallback>
                     </Avatar>
                     <span className="truncate text-xs font-bold text-[#5f6661]">{project.ownerName || "Usuario"}</span>
-                  </div>
+                  </Link>
                   <div className="flex items-center gap-2">
                     {project.demoUri && (
                       <Button asChild size="icon" variant="ghost" className="h-9 w-9 rounded-xl">
@@ -269,7 +270,7 @@ export function ProjectsPage() {
       </section>
 
       {projects.length === 0 && (
-        <div className="soft-panel mt-6 rounded-[28px] p-8 text-center text-sm font-medium text-[#5f6661]">
+        <div className="soft-panel mt-6 rounded-[28px] p-8 text-center text-sm font-medium text-[#5f6661] lg:rounded-lg">
           Todavia no hay proyectos publicados.
         </div>
       )}
@@ -279,7 +280,7 @@ export function ProjectsPage() {
 
 function Metric({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-2xl border border-[#dfe4dd] bg-[#fbfcf8] p-4">
+    <div className="rounded-2xl border border-[#dfe4dd] bg-[#fbfcf8] p-4 lg:rounded-lg">
       <p className="text-2xl font-black text-[#1a1a1a]">{value}</p>
       <p className="mt-1 text-sm font-bold text-[#5f6661]">{label}</p>
     </div>
@@ -302,9 +303,9 @@ function FileField({
   required?: boolean
 }) {
   return (
-    <label className="block rounded-2xl border border-[#dfe4dd] bg-[#fbfcf8] p-4">
+    <label className="block rounded-2xl border border-[#dfe4dd] bg-[#fbfcf8] p-4 lg:rounded-lg">
       <span className="flex items-center gap-3">
-        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-[#1a1a1a]">
+        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-[#1a1a1a] lg:rounded-md">
           <Icon className="h-5 w-5" />
         </span>
         <span className="min-w-0">
@@ -377,7 +378,7 @@ function getInitials(name?: string | null) {
 
 function FolderArtwork() {
   return (
-    <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-white">
+    <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-white lg:rounded-lg">
       <Mic2 className="h-7 w-7" />
     </div>
   )
