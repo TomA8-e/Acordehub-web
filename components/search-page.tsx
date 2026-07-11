@@ -19,6 +19,9 @@ export function SearchPage() {
   const { user, loading } = useAuth()
   const [queryText, setQueryText] = useState("")
   const [activeChip, setActiveChip] = useState("")
+  const [showFilters, setShowFilters] = useState(false)
+  const [accountType, setAccountType] = useState("")
+  const [location, setLocation] = useState("")
   const [musicians, setMusicians] = useState<UserProfile[]>([])
 
   useEffect(() => {
@@ -59,10 +62,12 @@ export function SearchPage() {
         musician.role?.toLowerCase().includes(chip) ||
         musician.genres?.some((genre) => genre.toLowerCase() === chip) ||
         musician.instruments?.some((instrument) => instrument.toLowerCase() === chip)
+      const matchesAccount = !accountType || musician.accountType === accountType
+      const matchesLocation = !location.trim() || musician.location?.toLowerCase().includes(location.trim().toLowerCase())
 
-      return matchesQuery && matchesChip
+      return matchesQuery && matchesChip && matchesAccount && matchesLocation
     })
-  }, [activeChip, musicians, queryText])
+  }, [accountType, activeChip, location, musicians, queryText])
 
   if (loading) {
     return <main className="app-container text-[#1a1a1a]">Cargando...</main>
@@ -99,11 +104,26 @@ export function SearchPage() {
               className="h-14 rounded-2xl border-[#dfe4dd] bg-white pl-12 text-[#1a1a1a] shadow-none placeholder:text-[#8a918c] lg:rounded-md"
             />
           </div>
-          <Button variant="outline" className="h-14 rounded-2xl border-[#dfe4dd] bg-white px-5 font-bold lg:rounded-md">
+          <Button type="button" variant="outline" onClick={() => setShowFilters((value) => !value)} aria-expanded={showFilters} className="h-14 rounded-2xl border-[#dfe4dd] bg-white px-5 font-bold lg:rounded-md">
             <SlidersHorizontal className="mr-2 h-4 w-4" />
             Filtros
           </Button>
         </div>
+        {showFilters && (
+          <div className="mt-4 grid gap-3 rounded-2xl border border-[#dfe4dd] bg-white p-4 sm:grid-cols-[1fr_1fr_auto] lg:rounded-md">
+            <label className="text-xs font-bold uppercase tracking-wide text-[#5f6661]">
+              Tipo de perfil
+              <select value={accountType} onChange={(e) => setAccountType(e.target.value)} className="mt-2 h-11 w-full rounded-xl border border-[#dfe4dd] bg-white px-3 text-sm normal-case text-[#1a1a1a]">
+                <option value="">Todos</option><option value="musician">Musico</option><option value="producer">Productor</option>
+              </select>
+            </label>
+            <label className="text-xs font-bold uppercase tracking-wide text-[#5f6661]">
+              Ciudad o zona
+              <Input value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Ej: Buenos Aires" className="mt-2 h-11 rounded-xl border-[#dfe4dd]" />
+            </label>
+            <Button type="button" variant="ghost" onClick={() => { setAccountType(""); setLocation(""); setActiveChip(""); setQueryText("") }} className="self-end">Limpiar</Button>
+          </div>
+        )}
       </section>
 
       <section className="mt-5 flex gap-2 overflow-x-auto pb-1 lg:flex-wrap lg:overflow-visible">

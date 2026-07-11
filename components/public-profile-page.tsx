@@ -102,7 +102,7 @@ export function PublicProfilePage({ uid }: { uid: string }) {
                 </Button>
               )}
               <Button asChild variant="outline" className="rounded-2xl border-[#dfe4dd] bg-white lg:rounded-md">
-                <a href={`mailto:${profile.email}`}>Contactar</a>
+                <Link href={`/messages?with=${profile.uid}`}>Enviar mensaje</Link>
               </Button>
             </div>
           </div>

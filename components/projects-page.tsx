@@ -8,11 +8,13 @@ import {
   collection,
   doc,
   getDoc,
+  getDocs,
   limit,
   onSnapshot,
   orderBy,
   query,
   serverTimestamp,
+  setDoc,
   updateDoc,
 } from "firebase/firestore"
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage"
@@ -38,6 +40,7 @@ export function ProjectsPage() {
   const [demo, setDemo] = useState<File | null>(null)
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState("")
+  const [requestedProjects, setRequestedProjects] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     if (!user) return
@@ -53,6 +56,17 @@ export function ProjectsPage() {
       },
       (err) => setMessage(err.message)
     )
+  }, [user])
+
+  useEffect(() => {
+    if (!user) return
+    getDocs(query(collection(db, "projects"), limit(100))).then(async (snapshot) => {
+      const checks = await Promise.all(snapshot.docs.map(async (project) => {
+        const request = await getDoc(doc(db, "projects", project.id, "joinRequests", user.uid))
+        return request.exists() ? project.id : ""
+      }))
+      setRequestedProjects(new Set(checks.filter(Boolean)))
+    }).catch(() => undefined)
   }, [user])
 
   const myProjects = useMemo(() => {
@@ -111,6 +125,22 @@ export function ProjectsPage() {
     } finally {
       setSaving(false)
     }
+  }
+
+  const requestToJoin = async (project: Project) => {
+    if (!user || project.ownerUid === user.uid || requestedProjects.has(project.id)) return
+    setMessage("")
+    try {
+      const profileSnapshot = await getDoc(doc(db, "users", user.uid))
+      const profile = profileSnapshot.data() as UserProfile | undefined
+      await setDoc(doc(db, "projects", project.id, "joinRequests", user.uid), {
+        projectId: project.id, projectTitle: project.title, ownerUid: project.ownerUid,
+        requesterUid: user.uid, requesterName: profile?.name || user.displayName || "Usuario",
+        requesterEmail: profile?.email || user.email || "", status: "pending", createdAt: serverTimestamp(),
+      })
+      setRequestedProjects((current) => new Set(current).add(project.id))
+      setMessage("Solicitud enviada al creador del proyecto")
+    } catch (err) { setMessage(err instanceof Error ? err.message : "No se pudo enviar la solicitud") }
   }
 
   if (loading) {
@@ -263,6 +293,11 @@ export function ProjectsPage() {
                     </span>
                   </div>
                 </div>
+                {project.ownerUid !== user.uid && (
+                  <Button type="button" variant="outline" disabled={requestedProjects.has(project.id)} onClick={() => requestToJoin(project)} className="mt-4 w-full rounded-xl border-[#dfe4dd]">
+                    {requestedProjects.has(project.id) ? "Solicitud enviada" : "Quiero sumarme"}
+                  </Button>
+                )}
               </div>
             </CardContent>
           </Card>

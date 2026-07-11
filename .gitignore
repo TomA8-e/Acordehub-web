@@ -15,4 +15,5 @@ node_modules
 .next/
 .next-*.err
 .next-*.log
+tsconfig.tsbuildinfo
 .DS_Store

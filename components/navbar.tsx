@@ -73,11 +73,11 @@ export function Navbar() {
                 Planes
               </Link>
             </Button>
-            <Button variant="ghost" size="icon" className="h-10 w-10 rounded-2xl text-[#1a1a1a] hover:bg-white lg:rounded-md lg:hover:bg-[#eef2f0]">
-              <Bell className="h-5 w-5" />
+            <Button asChild variant="ghost" size="icon" className="h-10 w-10 rounded-2xl text-[#1a1a1a] hover:bg-white lg:rounded-md lg:hover:bg-[#eef2f0]">
+              <Link href="/notifications" aria-label="Notificaciones"><Bell className="h-5 w-5" /></Link>
             </Button>
-            <Button variant="ghost" size="icon" className="h-10 w-10 rounded-2xl text-[#1a1a1a] hover:bg-white lg:rounded-md lg:hover:bg-[#eef2f0]">
-              <MessageCircle className="h-5 w-5" />
+            <Button asChild variant="ghost" size="icon" className="h-10 w-10 rounded-2xl text-[#1a1a1a] hover:bg-white lg:rounded-md lg:hover:bg-[#eef2f0]">
+              <Link href="/messages" aria-label="Mensajes"><MessageCircle className="h-5 w-5" /></Link>
             </Button>
             <Link href="/profile" aria-label="Perfil">
               <Avatar className="h-10 w-10 border border-white shadow-sm ring-1 ring-[#dfe4dd]">
