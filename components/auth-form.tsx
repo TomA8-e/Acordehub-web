@@ -93,14 +93,18 @@ export function AuthForm({ mode }: AuthFormProps) {
       <section className="mx-auto grid min-h-[calc(100vh-3rem)] max-w-6xl items-center gap-6 lg:grid-cols-[1.05fr_0.95fr]">
         <div className="hidden min-h-[680px] flex-col justify-between rounded-[32px] bg-[#1a1a1a] p-8 text-white shadow-[0_24px_80px_rgba(26,26,26,0.28)] lg:flex">
           <div>
-            <div className="flex items-center gap-3">
-              <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white">
-                <Image src="/acordehub.png" alt="AcordeHub" width={44} height={44} priority />
+            <div>
+              <span className="relative block h-16 w-56 overflow-hidden rounded-2xl bg-white">
+                <Image
+                  src="/acordehub.png"
+                  alt="AcordeHub"
+                  fill
+                  priority
+                  sizes="224px"
+                  className="object-cover object-[center_69%]"
+                />
               </span>
-              <div>
-                <p className="text-xl font-black">AcordeHub</p>
-                <p className="text-xs font-bold uppercase tracking-[0.18em] text-white/55">Creative network</p>
-              </div>
+              <p className="mt-2 text-xs font-bold uppercase tracking-[0.18em] text-white/55">Creative network</p>
             </div>
 
             <div className="mt-20 max-w-lg">
@@ -134,14 +138,16 @@ export function AuthForm({ mode }: AuthFormProps) {
 
         <div className="mx-auto w-full max-w-md rounded-[28px] border border-white/70 bg-white/88 p-5 shadow-[0_24px_70px_rgba(26,26,26,0.16)] backdrop-blur-xl sm:p-7">
           <div className="mb-8 text-center">
-            <Image
-              src="/acordehub.png"
-              alt="AcordeHub"
-              width={104}
-              height={104}
-              priority
-              className="mx-auto object-contain"
-            />
+            <span className="relative mx-auto block h-20 w-64 max-w-full overflow-hidden">
+              <Image
+                src="/acordehub.png"
+                alt="AcordeHub"
+                fill
+                priority
+                sizes="256px"
+                className="object-cover object-[center_69%]"
+              />
+            </span>
             <p className="eyebrow mt-4">AcordeHub</p>
             <h1 className="mt-2 text-3xl font-black text-[#1a1a1a]">
               {isLogin ? "Bienvenido de vuelta" : "Crea tu cuenta"}

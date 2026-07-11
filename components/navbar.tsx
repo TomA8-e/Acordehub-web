@@ -31,15 +31,16 @@ export function Navbar() {
     <>
       <header className="sticky top-0 z-40 border-b border-[#dfe4dd]/80 bg-[#f5f6f2]/85 backdrop-blur-xl lg:bg-white lg:backdrop-blur-none">
         <div className="mx-auto flex h-[72px] max-w-7xl items-center justify-between px-4 sm:px-6 lg:h-20 lg:px-10 xl:px-12">
-          <Link href="/" className="flex items-center gap-3 rounded-xl py-2 transition-opacity hover:opacity-85">
-            <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white shadow-sm ring-1 ring-[#dfe4dd] lg:rounded-lg lg:bg-[#fbfcf8]">
-              <Image src="/acordehub.png" alt="AcordeHub" width={36} height={36} className="object-contain" />
-            </span>
-            <span className="hidden leading-tight sm:block">
-              <span className="block text-base font-black text-[#1a1a1a]">AcordeHub</span>
-              <span className="block text-[11px] font-semibold uppercase tracking-[0.14em] text-[#6b716c]">
-                Music network
-              </span>
+          <Link href="/" className="flex items-center rounded-xl py-2 transition-opacity hover:opacity-85">
+            <span className="relative h-11 w-36 overflow-hidden sm:w-44">
+              <Image
+                src="/acordehub.png"
+                alt="AcordeHub"
+                fill
+                priority
+                sizes="(min-width: 640px) 176px, 144px"
+                className="object-cover object-[center_69%]"
+              />
             </span>
           </Link>
 
