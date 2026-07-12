@@ -3,16 +3,14 @@
 import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import { Check, Crown, Loader2, Music, ShieldCheck, Sparkles } from "lucide-react"
-import { doc, getDoc, serverTimestamp, setDoc } from "firebase/firestore"
+import { doc, getDoc } from "firebase/firestore"
 import { useAuth } from "@/components/auth-provider"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { db } from "@/lib/firebase"
 import { plans, type UserProfile } from "@/lib/acordehub-types"
-
-const paymentBaseUrl =
-  process.env.NEXT_PUBLIC_PAYMENT_API_BASE_URL ?? "https://us-central1-acordehub.cloudfunctions.net"
+import { cancelSubscription, createPaymentPreference } from "@/lib/api"
 
 export function PlansPage() {
   const { user, loading } = useAuth()
@@ -40,19 +38,8 @@ export function PlansPage() {
     if (planId === "free") {
       setLoadingPlan(planId)
       try {
-        await setDoc(
-          doc(db, "users", user.uid),
-          {
-            plan: "free",
-            subscriptionStatus: "inactive",
-            subscriptionProvider: "",
-            subscriptionId: "",
-            autoRenew: false,
-            updatedAt: serverTimestamp(),
-          },
-          { merge: true }
-        )
-        setProfile((current) => current && { ...current, plan: "free", subscriptionStatus: "inactive" })
+        await cancelSubscription()
+        setProfile((current) => current && { ...current, plan: "free", subscriptionStatus: "cancelled" })
         setMessage("Volviste al plan Free.")
       } catch (err) {
         setMessage(err instanceof Error ? err.message : "No pudimos actualizar el plan")
@@ -64,22 +51,10 @@ export function PlansPage() {
 
     setLoadingPlan(planId)
     try {
-      const token = await user.getIdToken()
       const backUrl = `${window.location.origin}/plans?status=approved`
-      const response = await fetch(`${paymentBaseUrl.replace(/\/$/, "")}/createMercadoPagoPreference`, {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json",
-          "Accept": "application/json",
-        },
-        body: JSON.stringify({ planId, backUrl }),
-      })
-      const payload = await response.json().catch(() => ({}))
+      const payload = await createPaymentPreference(planId, backUrl)
       const checkoutUrl = payload.checkoutUrl || payload.sandboxCheckoutUrl
-      if (!response.ok || !checkoutUrl) {
-        throw new Error(payload.error || "No pudimos iniciar el pago")
-      }
+      if (!checkoutUrl) throw new Error("No pudimos iniciar el pago")
       window.location.href = checkoutUrl
     } catch (err) {
       setMessage(err instanceof Error ? err.message : "No pudimos iniciar el pago")

@@ -4,7 +4,6 @@ import Link from "next/link"
 import type { ComponentType } from "react"
 import { useEffect, useMemo, useState } from "react"
 import {
-  addDoc,
   collection,
   doc,
   getDoc,
@@ -15,7 +14,6 @@ import {
   query,
   serverTimestamp,
   setDoc,
-  updateDoc,
 } from "firebase/firestore"
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage"
 import { Calendar, Headphones, ImageIcon, Mic2, Plus, Upload } from "lucide-react"
@@ -28,6 +26,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { db, storage } from "@/lib/firebase"
 import type { Project, UserProfile } from "@/lib/acordehub-types"
+import { createProject } from "@/lib/api"
 
 export function ProjectsPage() {
   const { user, loading } = useAuth()
@@ -94,24 +93,17 @@ export function ProjectsPage() {
 
     setSaving(true)
     try {
-      const userSnapshot = await getDoc(doc(db, "users", user.uid))
-      const profile = userSnapshot.exists() ? (userSnapshot.data() as UserProfile) : null
-      const ownerName = profile?.name || user.displayName || user.email || "Usuario"
-      const projectRef = await addDoc(collection(db, "projects"), {
-        ownerUid: user.uid,
-        ownerName,
+      const projectId = doc(collection(db, "projects")).id
+      const imageUrl = cover ? await uploadProjectFile(user.uid, projectId, "cover", cover) : ""
+      const demoUrl = await uploadProjectFile(user.uid, projectId, "demo", demo)
+      await createProject({
+        projectId,
         title: title.trim(),
         description: description.trim(),
         genre: genre.trim(),
-        imageUri: "",
-        demoUri: "",
-        status: "active",
-        createdAt: serverTimestamp(),
+        imageUrl,
+        demoUrl,
       })
-
-      const imageUri = cover ? await uploadProjectFile(user.uid, projectRef.id, "cover", cover) : ""
-      const demoUri = await uploadProjectFile(user.uid, projectRef.id, "demo", demo)
-      await updateDoc(projectRef, { imageUri, demoUri })
 
       setTitle("")
       setDescription("")
