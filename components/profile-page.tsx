@@ -4,7 +4,7 @@ import type { ComponentType, ReactNode } from "react"
 import Link from "next/link"
 import { useEffect, useState } from "react"
 import { doc, getDoc, serverTimestamp, setDoc } from "firebase/firestore"
-import { BriefcaseBusiness, CreditCard, Edit2, ExternalLink, Guitar, MapPin, Music, Save, Trophy, X } from "lucide-react"
+import { BriefcaseBusiness, CreditCard, Edit2, ExternalLink, Guitar, Loader2, MapPin, Music, Save, Search, Trash2, Trophy, X } from "lucide-react"
 import { useAuth } from "@/components/auth-provider"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
@@ -13,7 +13,8 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { db } from "@/lib/firebase"
-import { defaultProfile, getAccountTypeLabel, type UserProfile } from "@/lib/acordehub-types"
+import { defaultProfile, getAccountTypeLabel, type FavoriteArtist, type UserProfile } from "@/lib/acordehub-types"
+import { searchSpotifyArtists, type SpotifyArtist } from "@/lib/api"
 
 const defaultGenres = ["Rock", "Pop", "Jazz", "Blues", "Electronica", "Folk", "Metal", "Funk"]
 const defaultInstruments = ["Guitarra", "Bajo", "Bateria", "Teclado", "Piano", "Voz", "Saxofon"]
@@ -264,6 +265,21 @@ export function ProfilePage() {
             )}
           </DarkCard>
 
+          {current.accountType !== "producer" && (
+            <DarkCard icon={Music} title="Artistas favoritos">
+              {isEditing ? (
+                <FavoriteArtistsEditor
+                  selected={draft.favoriteArtists ?? []}
+                  onChange={(favoriteArtists) =>
+                    setDraft((previous) => previous && { ...previous, favoriteArtists })
+                  }
+                />
+              ) : (
+                <FavoriteArtistsList artists={current.favoriteArtists ?? []} />
+              )}
+            </DarkCard>
+          )}
+
           {current.accountType === "producer" && (
             <DarkCard icon={BriefcaseBusiness} title="Perfil de productor">
               {isEditing ? (
@@ -446,6 +462,125 @@ function ProducerLine({ label, value }: { label: string; value?: string }) {
       <p className="text-xs font-bold uppercase tracking-[0.12em] text-[#a7afbc] md:text-[#5f6661]">{label}</p>
       <p className="mt-1 text-sm leading-6 text-white md:text-[#1a1a1a]">{value}</p>
     </div>
+  )
+}
+
+function FavoriteArtistsEditor({
+  selected,
+  onChange,
+}: {
+  selected: FavoriteArtist[]
+  onChange: (artists: FavoriteArtist[]) => void
+}) {
+  const [query, setQuery] = useState("")
+  const [results, setResults] = useState<SpotifyArtist[]>([])
+  const [searching, setSearching] = useState(false)
+  const [error, setError] = useState("")
+
+  const search = async (event: React.FormEvent) => {
+    event.preventDefault()
+    if (query.trim().length < 2) {
+      setError("Escribi al menos dos caracteres.")
+      return
+    }
+    setSearching(true)
+    setError("")
+    try {
+      const response = await searchSpotifyArtists(query.trim())
+      setResults(response.artists)
+      if (response.artists.length === 0) setError("No encontramos artistas con ese nombre.")
+    } catch (searchError) {
+      setError(searchError instanceof Error ? searchError.message : "No se pudo buscar en Spotify")
+    } finally {
+      setSearching(false)
+    }
+  }
+
+  const add = (artist: SpotifyArtist) => {
+    if (selected.some((item) => item.id === artist.id)) return
+    onChange([...selected, artist])
+  }
+
+  return (
+    <div className="space-y-4">
+      <FavoriteArtistsList
+        artists={selected}
+        onRemove={(artist) => onChange(selected.filter((item) => item.id !== artist.id))}
+      />
+      <form onSubmit={search} className="flex gap-2">
+        <Input
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          placeholder="Buscar un artista en Spotify"
+          maxLength={100}
+          className="border-[#2a2a2a] bg-[#202020] text-white md:rounded-md md:border-[#dfe4dd] md:bg-[#fbfcf8] md:text-[#1a1a1a]"
+        />
+        <Button type="submit" disabled={searching} className="bg-[#1ed760] text-black hover:bg-[#1fdf64]">
+          {searching ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+          <span className="sr-only">Buscar en Spotify</span>
+        </Button>
+      </form>
+      {error && <p className="text-sm text-[#f7c948] md:text-[#c47a00]">{error}</p>}
+      {results.length > 0 && (
+        <div className="grid gap-2 sm:grid-cols-2">
+          {results.map((artist) => {
+            const added = selected.some((item) => item.id === artist.id)
+            return (
+              <button
+                key={artist.id}
+                type="button"
+                disabled={added}
+                onClick={() => add(artist)}
+                className="flex items-center gap-3 rounded-xl border border-[#2a2a2a] p-2 text-left disabled:opacity-50 md:rounded-md md:border-[#dfe4dd]"
+              >
+                <ArtistImage artist={artist} />
+                <span className="min-w-0 flex-1 truncate text-sm font-bold">{artist.name}</span>
+                <span className="text-xs text-[#a7afbc] md:text-[#5f6661]">{added ? "Agregado" : "Agregar"}</span>
+              </button>
+            )
+          })}
+        </div>
+      )}
+      <p className="text-xs text-[#a7afbc] md:text-[#5f6661]">Resultados provistos por Spotify.</p>
+    </div>
+  )
+}
+
+function FavoriteArtistsList({
+  artists,
+  onRemove,
+}: {
+  artists: FavoriteArtist[]
+  onRemove?: (artist: FavoriteArtist) => void
+}) {
+  if (artists.length === 0) {
+    return <p className="text-sm text-[#a7afbc] md:text-[#5f6661]">Todavia no agregaste artistas favoritos.</p>
+  }
+  return (
+    <div className="grid gap-2 sm:grid-cols-2">
+      {artists.map((artist, index) => (
+        <div key={artist.id || `${artist.name}-${index}`} className="flex items-center gap-3 rounded-xl bg-[#202020] p-2 md:rounded-md md:bg-[#eef2f0]">
+          <ArtistImage artist={artist} />
+          <span className="min-w-0 flex-1 truncate text-sm font-bold">{artist.name || "Artista"}</span>
+          {onRemove && (
+            <Button type="button" size="icon" variant="ghost" onClick={() => onRemove(artist)} className="h-8 w-8 shrink-0" aria-label={`Quitar ${artist.name || "artista"}`}>
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function ArtistImage({ artist }: { artist: FavoriteArtist }) {
+  return artist.imageUrl ? (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img src={artist.imageUrl} alt="" className="h-10 w-10 shrink-0 rounded-full object-cover" />
+  ) : (
+    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#111111] text-white">
+      <Music className="h-4 w-4" />
+    </span>
   )
 }
 

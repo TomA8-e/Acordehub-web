@@ -24,6 +24,12 @@ type PaymentPreference = {
   sandboxCheckoutUrl?: string
 }
 
+export type SpotifyArtist = {
+  id: string
+  name: string
+  imageUrl: string
+}
+
 export async function apiRequest<T>(endpoint: string, options: ApiOptions = {}): Promise<T> {
   const user = auth.currentUser
   if (!user) throw new Error("Debes iniciar sesion")
@@ -71,4 +77,11 @@ export function createPaymentPreference(planId: string, backUrl: string) {
 
 export function cancelSubscription() {
   return apiRequest<{ plan: string; status: string }>("cancelSubscription", { method: "POST" })
+}
+
+export function searchSpotifyArtists(query: string) {
+  return apiRequest<{ artists: SpotifyArtist[] }>("searchSpotifyArtists", {
+    method: "POST",
+    body: { query },
+  })
 }
