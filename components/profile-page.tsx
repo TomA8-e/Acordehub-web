@@ -265,20 +265,18 @@ export function ProfilePage() {
             )}
           </DarkCard>
 
-          {current.accountType !== "producer" && (
-            <DarkCard icon={Music} title="Artistas favoritos">
-              {isEditing ? (
-                <FavoriteArtistsEditor
-                  selected={draft.favoriteArtists ?? []}
-                  onChange={(favoriteArtists) =>
-                    setDraft((previous) => previous && { ...previous, favoriteArtists })
-                  }
-                />
-              ) : (
-                <FavoriteArtistsList artists={current.favoriteArtists ?? []} />
-              )}
-            </DarkCard>
-          )}
+          <DarkCard icon={Music} title="Artistas favoritos">
+            {isEditing ? (
+              <FavoriteArtistsEditor
+                selected={draft.favoriteArtists ?? []}
+                onChange={(favoriteArtists) =>
+                  setDraft((previous) => previous && { ...previous, favoriteArtists })
+                }
+              />
+            ) : (
+              <FavoriteArtistsList artists={current.favoriteArtists ?? []} />
+            )}
+          </DarkCard>
 
           {current.accountType === "producer" && (
             <DarkCard icon={BriefcaseBusiness} title="Perfil de productor">
@@ -490,7 +488,12 @@ function FavoriteArtistsEditor({
       setResults(response.artists)
       if (response.artists.length === 0) setError("No encontramos artistas con ese nombre.")
     } catch (searchError) {
-      setError(searchError instanceof Error ? searchError.message : "No se pudo buscar en Spotify")
+      const message = searchError instanceof Error ? searchError.message : ""
+      setError(
+        message === "unauthenticated"
+          ? "Tu sesion vencio. Volve a iniciar sesion para buscar artistas."
+          : "No pudimos buscar en Spotify. Intenta nuevamente."
+      )
     } finally {
       setSearching(false)
     }
@@ -503,6 +506,17 @@ function FavoriteArtistsEditor({
 
   return (
     <div className="space-y-4">
+      <div className="flex items-start gap-3 rounded-xl bg-[#e8f8ed] p-3 text-[#116530]">
+        <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#1ed760] text-black">
+          <Music className="h-4 w-4" />
+        </span>
+        <div>
+          <p className="text-sm font-black">Conecta tus gustos con Spotify</p>
+          <p className="mt-0.5 text-xs leading-5 text-[#3f6f50]">
+            Busca artistas, agregalos a tu perfil y guarda los cambios al terminar.
+          </p>
+        </div>
+      </div>
       <FavoriteArtistsList
         artists={selected}
         onRemove={(artist) => onChange(selected.filter((item) => item.id !== artist.id))}
