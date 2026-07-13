@@ -241,6 +241,19 @@ export function ProfilePage() {
             )}
           </DarkCard>
 
+          <DarkCard icon={Music} title="Artistas favoritos · Spotify">
+            {isEditing ? (
+              <FavoriteArtistsEditor
+                selected={draft.favoriteArtists ?? []}
+                onChange={(favoriteArtists) =>
+                  setDraft((previous) => previous && { ...previous, favoriteArtists })
+                }
+              />
+            ) : (
+              <FavoriteArtistsList artists={current.favoriteArtists ?? []} />
+            )}
+          </DarkCard>
+
           <DarkCard title="Generos musicales">
             {isEditing ? (
               <SelectableTags
@@ -262,19 +275,6 @@ export function ProfilePage() {
               />
             ) : (
               <TagList items={current.instruments ?? []} empty="Sin instrumentos definidos" />
-            )}
-          </DarkCard>
-
-          <DarkCard icon={Music} title="Artistas favoritos">
-            {isEditing ? (
-              <FavoriteArtistsEditor
-                selected={draft.favoriteArtists ?? []}
-                onChange={(favoriteArtists) =>
-                  setDraft((previous) => previous && { ...previous, favoriteArtists })
-                }
-              />
-            ) : (
-              <FavoriteArtistsList artists={current.favoriteArtists ?? []} />
             )}
           </DarkCard>
 
