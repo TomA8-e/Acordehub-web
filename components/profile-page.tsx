@@ -475,6 +475,42 @@ function FavoriteArtistsEditor({
   const [searching, setSearching] = useState(false)
   const [error, setError] = useState("")
 
+  useEffect(() => {
+    const normalizedQuery = query.trim()
+    if (normalizedQuery.length < 2) {
+      setResults([])
+      setError("")
+      return
+    }
+
+    let cancelled = false
+    const timer = window.setTimeout(async () => {
+      setSearching(true)
+      setError("")
+      try {
+        const response = await searchSpotifyArtists(normalizedQuery)
+        if (cancelled) return
+        setResults(response.artists)
+        if (response.artists.length === 0) setError("No encontramos artistas con ese nombre.")
+      } catch (searchError) {
+        if (cancelled) return
+        const message = searchError instanceof Error ? searchError.message : ""
+        setError(
+          message === "unauthenticated"
+            ? "Tu sesion vencio. Volve a iniciar sesion para buscar artistas."
+            : "No pudimos buscar en Spotify. Intenta nuevamente."
+        )
+      } finally {
+        if (!cancelled) setSearching(false)
+      }
+    }, 500)
+
+    return () => {
+      cancelled = true
+      window.clearTimeout(timer)
+    }
+  }, [query])
+
   const search = async (event: React.FormEvent) => {
     event.preventDefault()
     if (query.trim().length < 2) {
