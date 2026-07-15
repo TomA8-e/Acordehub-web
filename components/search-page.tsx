@@ -5,18 +5,21 @@ import Link from "next/link"
 import { collection, limit, onSnapshot, query } from "firebase/firestore"
 import { ArrowRight, Filter, MapPin, Search, SlidersHorizontal, UserRound, X } from "lucide-react"
 import { useAuth } from "@/components/auth-provider"
+import { MusicAffinity } from "@/components/music-affinity"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { db } from "@/lib/firebase"
+import { useCurrentUserProfile } from "@/hooks/use-current-user-profile"
 import { getAccountTypeLabel, type UserProfile } from "@/lib/acordehub-types"
 
 const chips = ["Musico", "Productor", "Rock", "Pop", "Jazz", "Voz", "Guitarra"]
 
 export function SearchPage() {
   const { user, loading } = useAuth()
+  const { profile: currentProfile, loading: profileLoading } = useCurrentUserProfile()
   const [queryText, setQueryText] = useState("")
   const [activeChip, setActiveChip] = useState("")
   const [showFilters, setShowFilters] = useState(false)
@@ -69,7 +72,7 @@ export function SearchPage() {
     })
   }, [accountType, activeChip, location, musicians, queryText])
 
-  if (loading) {
+  if (loading || profileLoading) {
     return <main className="app-container text-[#1a1a1a]">Cargando...</main>
   }
 
@@ -181,6 +184,10 @@ export function SearchPage() {
                   </Badge>
                 ))}
               </div>
+
+              {currentProfile && (
+                <MusicAffinity currentUser={currentProfile} targetUser={musician} variant="compact" className="mt-4" />
+              )}
 
               <Button asChild variant="outline" className="mt-5 h-11 w-full rounded-2xl border-[#dfe4dd] bg-white font-bold lg:rounded-md">
                 <Link href={`/profile/${musician.uid}`}>

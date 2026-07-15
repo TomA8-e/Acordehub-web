@@ -5,13 +5,16 @@ import { useEffect, useState } from "react"
 import { collection, doc, getDoc, limit, onSnapshot, query, where } from "firebase/firestore"
 import { ArrowLeft, BriefcaseBusiness, Calendar, ExternalLink, Headphones, MapPin, Music2 } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { MusicAffinity } from "@/components/music-affinity"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { db } from "@/lib/firebase"
+import { useCurrentUserProfile } from "@/hooks/use-current-user-profile"
 import { getAccountTypeLabel, type Project, type UserProfile } from "@/lib/acordehub-types"
 
 export function PublicProfilePage({ uid }: { uid: string }) {
+  const { profile: currentProfile } = useCurrentUserProfile()
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [projects, setProjects] = useState<Project[]>([])
   const [loading, setLoading] = useState(true)
@@ -122,6 +125,10 @@ export function PublicProfilePage({ uid }: { uid: string }) {
 
       <section className="mt-6 grid gap-5 lg:grid-cols-[minmax(0,1fr)_360px]">
         <div className="space-y-5">
+          {currentProfile && currentProfile.uid !== profile.uid && (
+            <MusicAffinity currentUser={currentProfile} targetUser={profile} />
+          )}
+
           <InfoCard icon={Music2} title="Sobre el perfil">
             <p className="text-sm leading-6 text-[#5f6661]">{profile.description || "Todavia no agrego una descripcion."}</p>
           </InfoCard>
