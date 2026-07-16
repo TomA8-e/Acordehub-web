@@ -6,6 +6,7 @@ import { collection, doc, getDoc, limit, onSnapshot, query, where } from "fireba
 import { ArrowLeft, BriefcaseBusiness, Calendar, ExternalLink, Headphones, MapPin, Music2 } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { MusicAffinity } from "@/components/music-affinity"
+import { ConnectionAction } from "@/components/connection-action"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -104,9 +105,9 @@ export function PublicProfilePage({ uid }: { uid: string }) {
                   </a>
                 </Button>
               )}
-              <Button asChild variant="outline" className="rounded-2xl border-[#dfe4dd] bg-white lg:rounded-md">
-                <Link href={`/messages?with=${profile.uid}`}>Enviar mensaje</Link>
-              </Button>
+              {currentProfile && currentProfile.uid !== profile.uid && (
+                <ConnectionAction currentUser={currentProfile} targetUser={profile} />
+              )}
             </div>
           </div>
 

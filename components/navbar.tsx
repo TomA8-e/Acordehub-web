@@ -15,6 +15,7 @@ const navItems = [
   { href: "/", label: "Inicio", icon: Home },
   { href: "/search", label: "Buscar", icon: Search },
   { href: "/projects", label: "Proyectos", icon: FolderKanban },
+  { href: "/chats", label: "Chats", icon: MessageCircle },
   { href: "/plans", label: "Planes", icon: CreditCard },
   { href: "/profile", label: "Perfil", icon: User },
 ]
@@ -76,9 +77,6 @@ export function Navbar() {
             <Button asChild variant="ghost" size="icon" className="h-10 w-10 rounded-2xl text-[#1a1a1a] hover:bg-white lg:rounded-md lg:hover:bg-[#eef2f0]">
               <Link href="/notifications" aria-label="Notificaciones"><Bell className="h-5 w-5" /></Link>
             </Button>
-            <Button asChild variant="ghost" size="icon" className="h-10 w-10 rounded-2xl text-[#1a1a1a] hover:bg-white lg:rounded-md lg:hover:bg-[#eef2f0]">
-              <Link href="/messages" aria-label="Mensajes"><MessageCircle className="h-5 w-5" /></Link>
-            </Button>
             <Link href="/profile" aria-label="Perfil">
               <Avatar className="h-10 w-10 border border-white shadow-sm ring-1 ring-[#dfe4dd]">
                 <AvatarImage src={user?.photoURL ?? "/placeholder-user.jpg"} alt="Usuario" />
@@ -106,7 +104,7 @@ export function Navbar() {
       </header>
 
       <nav className="fixed inset-x-0 bottom-0 z-50 px-3 pb-[max(env(safe-area-inset-bottom),0.75rem)] md:hidden">
-        <div className="mx-auto grid max-w-md grid-cols-5 gap-1 rounded-[24px] border border-white/10 bg-[#1a1a1a]/96 p-1.5 text-white shadow-[0_16px_44px_rgba(0,0,0,0.28)] backdrop-blur-xl">
+        <div className="mx-auto grid max-w-md grid-cols-6 gap-1 rounded-[24px] border border-white/10 bg-[#1a1a1a]/96 p-1.5 text-white shadow-[0_16px_44px_rgba(0,0,0,0.28)] backdrop-blur-xl">
           {navItems.map((item) => {
             const Icon = item.icon
             const isActive = pathname === item.href

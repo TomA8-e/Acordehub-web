@@ -92,6 +92,10 @@ export function cancelSubscription() {
   return apiRequest<{ plan: string; status: string }>("cancelSubscription", { method: "POST" })
 }
 
+export function syncAcceptedConversations() {
+  return apiRequest<{ conversationIds: string[] }>("syncAcceptedConversations", { method: "POST" })
+}
+
 export function searchSpotifyArtists(query: string) {
   return apiRequest<{ artists: SpotifyArtist[] }>("searchSpotifyArtists", {
     method: "POST",
