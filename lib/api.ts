@@ -19,9 +19,15 @@ type ProjectInput = {
 }
 
 type PaymentPreference = {
+  paymentPreferenceId?: string
   preferenceId?: string
   checkoutUrl?: string
   sandboxCheckoutUrl?: string
+}
+
+export type PaymentSyncResult = {
+  plan: string
+  status: string
 }
 
 export type SpotifyArtist = {
@@ -72,6 +78,13 @@ export function createPaymentPreference(planId: string, backUrl: string) {
   return apiRequest<PaymentPreference>("createMercadoPagoPreference", {
     method: "POST",
     body: { planId, backUrl },
+  })
+}
+
+export function syncMercadoPagoSubscription(paymentPreferenceId: string) {
+  return apiRequest<PaymentSyncResult>("syncMercadoPagoSubscription", {
+    method: "POST",
+    body: { paymentPreferenceId },
   })
 }
 

@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { db } from "@/lib/firebase"
 import { plans, type UserProfile } from "@/lib/acordehub-types"
-import { cancelSubscription, createPaymentPreference } from "@/lib/api"
+import { cancelSubscription, createPaymentPreference, syncMercadoPagoSubscription } from "@/lib/api"
 
 export function PlansPage() {
   const { user, loading } = useAuth()
@@ -27,6 +27,35 @@ export function PlansPage() {
     }
 
     load().catch((err) => setMessage(err instanceof Error ? err.message : "No pudimos cargar tu plan"))
+  }, [user])
+
+  useEffect(() => {
+    if (!user || typeof window === "undefined") return
+    const params = new URLSearchParams(window.location.search)
+    if (params.get("checkout") !== "return") return
+
+    const paymentPreferenceId = window.sessionStorage.getItem("acordehubPaymentPreferenceId")
+    window.history.replaceState({}, "", "/plans")
+    if (!paymentPreferenceId) {
+      setMessage("Volviste de Mercado Pago. Estamos esperando la confirmación del pago.")
+      return
+    }
+
+    setLoadingPlan("sync")
+    syncMercadoPagoSubscription(paymentPreferenceId)
+      .then((result) => {
+        window.sessionStorage.removeItem("acordehubPaymentPreferenceId")
+        if (result.status === "active") {
+          setProfile((current) => current && { ...current, plan: result.plan, subscriptionStatus: "active" })
+          setMessage("¡Pago confirmado! Tu plan ya está activo.")
+        } else if (result.status === "cancelled" || result.status === "canceled") {
+          setMessage("El pago fue cancelado y no se realizó ningún cargo.")
+        } else {
+          setMessage("El pago está pendiente. Activaremos tu plan cuando Mercado Pago lo confirme.")
+        }
+      })
+      .catch((err) => setMessage(err instanceof Error ? err.message : "No pudimos verificar el pago"))
+      .finally(() => setLoadingPlan(null))
   }, [user])
 
   const currentPlan = useMemo(() => profile?.plan || "free", [profile?.plan])
@@ -51,11 +80,14 @@ export function PlansPage() {
 
     setLoadingPlan(planId)
     try {
-      const backUrl = `${window.location.origin}/plans?status=approved`
+      const backUrl = `${window.location.origin}/plans?checkout=return`
       const payload = await createPaymentPreference(planId, backUrl)
       const checkoutUrl = payload.checkoutUrl || payload.sandboxCheckoutUrl
       if (!checkoutUrl) throw new Error("No pudimos iniciar el pago")
-      window.location.href = checkoutUrl
+      if (payload.paymentPreferenceId) {
+        window.sessionStorage.setItem("acordehubPaymentPreferenceId", payload.paymentPreferenceId)
+      }
+      window.location.assign(checkoutUrl)
     } catch (err) {
       setMessage(err instanceof Error ? err.message : "No pudimos iniciar el pago")
       setLoadingPlan(null)
@@ -137,7 +169,7 @@ export function PlansPage() {
                   variant={plan.id === "free" ? "outline" : "default"}
                 >
                   {busy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  {active ? "Plan actual" : plan.id === "free" ? "Usar Free" : "Suscribirme"}
+                  {active ? "Plan actual" : plan.id === "free" ? "Usar Free" : "Pagar con Mercado Pago"}
                 </Button>
               </CardContent>
             </Card>
