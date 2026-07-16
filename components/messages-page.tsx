@@ -1,8 +1,9 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useSearchParams } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
+import { ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { ChatLayout } from "@/components/chat/chat-layout"
 import { useAuth } from "@/components/auth-provider"
@@ -10,6 +11,7 @@ import { useConversations } from "@/hooks/use-conversations"
 
 export function MessagesPage() {
   const { user, loading: authLoading } = useAuth()
+  const router = useRouter()
   const params = useSearchParams()
   const requestedConversation = params.get("conversation") || ""
   const { conversations, loading, error } = useConversations(user?.uid)
@@ -25,6 +27,14 @@ export function MessagesPage() {
     if (activeId && !conversations.some((item) => item.id === activeId)) setActiveId("")
   }, [activeId, conversations])
 
+  const goBack = () => {
+    if (window.history.length > 1) {
+      router.back()
+      return
+    }
+    router.push("/")
+  }
+
   if (authLoading) return <main className="app-container">Cargando chats...</main>
   if (!user) {
     return (
@@ -39,6 +49,15 @@ export function MessagesPage() {
 
   return (
     <main className="app-container py-4 lg:py-6">
+      <Button
+        type="button"
+        variant="ghost"
+        onClick={goBack}
+        className="mb-3 rounded-xl px-3 text-[#5f6661] hover:bg-white hover:text-[#1a1a1a] lg:rounded-md"
+      >
+        <ArrowLeft className="mr-2 h-4 w-4" />
+        Volver
+      </Button>
       <ChatLayout
         conversations={conversations}
         currentUserId={user.uid}
