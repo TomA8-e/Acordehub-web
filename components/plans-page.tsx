@@ -12,6 +12,14 @@ import { db } from "@/lib/firebase"
 import { plans, type UserProfile } from "@/lib/acordehub-types"
 import { cancelSubscription, createPaymentPreference, syncMercadoPagoSubscription } from "@/lib/api"
 
+const paymentErrorMessage = (error: unknown) => {
+  if (!(error instanceof Error)) return "No pudimos iniciar el pago. Intenta nuevamente en unos minutos."
+  if (error.message === "mercado_pago_credentials_invalid" || error.message === "payment_preference_error") {
+    return "Mercado Pago no esta disponible temporalmente. Estamos revisando la configuracion de cobros."
+  }
+  return error.message
+}
+
 export function PlansPage() {
   const { user, loading } = useAuth()
   const [profile, setProfile] = useState<UserProfile | null>(null)
@@ -89,7 +97,7 @@ export function PlansPage() {
       }
       window.location.assign(checkoutUrl)
     } catch (err) {
-      setMessage(err instanceof Error ? err.message : "No pudimos iniciar el pago")
+      setMessage(paymentErrorMessage(err))
       setLoadingPlan(null)
     }
   }
