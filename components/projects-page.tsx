@@ -16,8 +16,9 @@ import {
   setDoc,
 } from "firebase/firestore"
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage"
-import { Calendar, Headphones, ImageIcon, Mic2, Plus, Upload } from "lucide-react"
+import { Calendar, Eye, ImageIcon, Mic2, Plus, Upload } from "lucide-react"
 import { useAuth } from "@/components/auth-provider"
+import { ProjectDetailDialog } from "@/components/project-detail-dialog"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -40,6 +41,7 @@ export function ProjectsPage() {
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState("")
   const [requestedProjects, setRequestedProjects] = useState<Set<string>>(new Set())
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null)
 
   useEffect(() => {
     if (!user) return
@@ -229,7 +231,13 @@ export function ProjectsPage() {
 
       <section className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         {projects.map((project) => (
-          <Card key={project.id} className="surface-panel overflow-hidden rounded-[28px] lg:rounded-lg">
+          <Card key={project.id} className="surface-panel group relative overflow-hidden rounded-[28px] transition-transform hover:-translate-y-1 lg:rounded-lg">
+            <button
+              type="button"
+              className="absolute inset-0 z-0 cursor-pointer rounded-[28px] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#f5a623] focus-visible:ring-offset-2 lg:rounded-lg"
+              onClick={() => setSelectedProject(project)}
+              aria-label={`Ver proyecto ${project.title}`}
+            />
             <CardContent className="p-0">
               {project.imageUri ? (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -263,7 +271,7 @@ export function ProjectsPage() {
                 </div>
 
                 <div className="flex items-center justify-between border-t border-[#dfe4dd] pt-4">
-                  <Link href={`/profile/${project.ownerUid}`} className="flex min-w-0 items-center gap-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#f5a623]">
+                  <Link href={`/profile/${project.ownerUid}`} className="relative z-10 flex min-w-0 items-center gap-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#f5a623]">
                     <Avatar className="h-8 w-8">
                       <AvatarFallback className="bg-[#fff3cf] text-xs font-black text-[#c47a00]">
                         {getInitials(project.ownerName)}
@@ -272,13 +280,6 @@ export function ProjectsPage() {
                     <span className="truncate text-xs font-bold text-[#5f6661]">{project.ownerName || "Usuario"}</span>
                   </Link>
                   <div className="flex items-center gap-2">
-                    {project.demoUri && (
-                      <Button asChild size="icon" variant="ghost" className="h-9 w-9 rounded-xl">
-                        <a href={project.demoUri} target="_blank" rel="noreferrer" aria-label="Escuchar demo">
-                          <Headphones className="h-4 w-4" />
-                        </a>
-                      </Button>
-                    )}
                     <span className="flex items-center gap-1 text-xs font-semibold text-[#8a918c]">
                       <Calendar className="h-3.5 w-3.5" />
                       {formatDate(project.createdAt)}
@@ -286,10 +287,18 @@ export function ProjectsPage() {
                   </div>
                 </div>
                 {project.ownerUid !== user.uid && (
-                  <Button type="button" variant="outline" disabled={requestedProjects.has(project.id)} onClick={() => requestToJoin(project)} className="mt-4 w-full rounded-xl border-[#dfe4dd]">
+                  <Button type="button" variant="outline" disabled={requestedProjects.has(project.id)} onClick={() => requestToJoin(project)} className="relative z-10 mt-4 w-full rounded-xl border-[#dfe4dd]">
                     {requestedProjects.has(project.id) ? "Solicitud enviada" : "Quiero sumarme"}
                   </Button>
                 )}
+                <button
+                  type="button"
+                  onClick={() => setSelectedProject(project)}
+                  className="relative z-10 mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-[#1a1a1a] px-4 py-2.5 text-sm font-black text-white transition-colors hover:bg-[#343734] focus:outline-none focus:ring-2 focus:ring-[#f5a623]"
+                >
+                  <Eye className="h-4 w-4" />
+                  Ver proyecto
+                </button>
               </div>
             </CardContent>
           </Card>
@@ -301,6 +310,19 @@ export function ProjectsPage() {
           Todavia no hay proyectos publicados.
         </div>
       )}
+
+      <ProjectDetailDialog
+        project={selectedProject}
+        open={Boolean(selectedProject)}
+        onOpenChange={(open) => {
+          if (!open) setSelectedProject(null)
+        }}
+        canJoin={Boolean(selectedProject && selectedProject.ownerUid !== user.uid)}
+        requestSent={Boolean(selectedProject && requestedProjects.has(selectedProject.id))}
+        onRequestToJoin={() => {
+          if (selectedProject) void requestToJoin(selectedProject)
+        }}
+      />
     </main>
   )
 }
