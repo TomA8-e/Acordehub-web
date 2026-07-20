@@ -45,21 +45,30 @@ export function ProjectDetailDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[92vh] max-w-5xl gap-0 overflow-y-auto border-0 bg-[#f5f6f2] p-0 sm:rounded-[30px]">
+      <DialogContent className="max-h-[92dvh] max-w-5xl gap-0 overflow-y-auto border-0 bg-[#f5f6f2] p-0 sm:rounded-[30px] lg:h-[min(840px,calc(100dvh-4rem))] lg:max-h-none lg:max-w-[min(1180px,calc(100vw-4rem))] lg:overflow-hidden">
         <DialogTitle className="sr-only">{project.title}</DialogTitle>
         <DialogDescription className="sr-only">
           Información y demo del proyecto musical {project.title}.
         </DialogDescription>
 
-        <div className="grid lg:grid-cols-[minmax(0,1.05fr)_minmax(380px,0.95fr)]">
-          <div className="relative min-h-72 overflow-hidden bg-[#252724] lg:min-h-[620px]">
+        <div className="grid lg:h-full lg:grid-cols-[minmax(440px,0.95fr)_minmax(500px,1.05fr)]">
+          <div className="relative min-h-72 overflow-hidden bg-[#252724] lg:min-h-0">
             {project.imageUri ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={project.imageUri}
-                alt={`Portada de ${project.title}`}
-                className="absolute inset-0 h-full w-full object-cover"
-              />
+              <>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={project.imageUri}
+                  alt=""
+                  aria-hidden="true"
+                  className="absolute inset-0 h-full w-full scale-110 object-cover opacity-65 blur-2xl"
+                />
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={project.imageUri}
+                  alt={`Portada de ${project.title}`}
+                  className="absolute inset-0 h-full w-full object-cover lg:inset-x-10 lg:top-10 lg:bottom-auto lg:h-[calc(100%-250px)] lg:w-[calc(100%-5rem)] lg:rounded-[24px] lg:object-contain lg:shadow-[0_24px_70px_rgba(0,0,0,0.38)]"
+                />
+              </>
             ) : (
               <div className="absolute inset-0 flex items-center justify-center bg-[radial-gradient(circle_at_20%_20%,#f5a623_0%,#504329_28%,#20231f_72%)]">
                 <div className="flex h-32 w-32 items-center justify-center rounded-[40px] border border-white/20 bg-white/10 text-white shadow-2xl backdrop-blur">
@@ -67,8 +76,8 @@ export function ProjectDetailDialog({
                 </div>
               </div>
             )}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/5 to-black/20" />
-            <div className="absolute inset-x-0 bottom-0 p-6 text-white sm:p-8">
+            <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/10 to-black/25 lg:from-black/90 lg:via-black/15" />
+            <div className="absolute inset-x-0 bottom-0 p-6 text-white sm:p-8 lg:p-10">
               <div className="mb-4 flex flex-wrap gap-2">
                 <Badge className="border-0 bg-[#f5a623] font-bold text-[#1a1a1a] hover:bg-[#f5a623]">
                   {project.genre}
@@ -79,7 +88,7 @@ export function ProjectDetailDialog({
                   </Badge>
                 )}
               </div>
-              <h2 className="max-w-2xl text-3xl font-black tracking-tight sm:text-4xl">{project.title}</h2>
+              <h2 className="max-w-2xl text-3xl font-black tracking-tight sm:text-4xl lg:text-[42px] lg:leading-[1.05]">{project.title}</h2>
               <p className="mt-3 flex items-center gap-2 text-sm font-semibold text-white/75">
                 <Calendar className="h-4 w-4" />
                 Publicado {formatDate(project.createdAt)}
@@ -87,15 +96,20 @@ export function ProjectDetailDialog({
             </div>
           </div>
 
-          <div className="flex flex-col bg-white p-6 sm:p-8">
-            <p className="eyebrow">Sobre la canción</p>
-            <p className="mt-3 whitespace-pre-wrap text-[15px] leading-7 text-[#5f6661]">
+          <div className="flex flex-col bg-white p-6 sm:p-8 lg:overflow-y-auto lg:p-10 xl:p-12">
+            <div className="flex items-center justify-between gap-4">
+              <p className="eyebrow">Sobre la canción</p>
+              <Badge variant="outline" className="hidden rounded-full border-[#dfe4dd] px-3 py-1 text-[#5f6661] lg:inline-flex">
+                Proyecto activo
+              </Badge>
+            </div>
+            <p className="mt-4 whitespace-pre-wrap text-[15px] leading-7 text-[#5f6661] lg:text-base lg:leading-8">
               {project.description}
             </p>
 
             <Link
               href={`/profile/${project.ownerUid}`}
-              className="mt-6 flex items-center gap-3 rounded-2xl border border-[#dfe4dd] bg-[#fbfcf8] p-4 transition-colors hover:bg-[#eef2f0] focus:outline-none focus:ring-2 focus:ring-[#f5a623]"
+              className="mt-7 flex items-center gap-3 rounded-2xl border border-[#dfe4dd] bg-[#fbfcf8] p-4 transition-colors hover:bg-[#eef2f0] focus:outline-none focus:ring-2 focus:ring-[#f5a623] lg:p-5"
             >
               <Avatar className="h-11 w-11">
                 <AvatarFallback className="bg-[#fff3cf] font-black text-[#c47a00]">
@@ -108,7 +122,7 @@ export function ProjectDetailDialog({
               </span>
             </Link>
 
-            <div className="mt-7">
+            <div className="mt-8">
               {project.demoUri ? (
                 <DemoPlayer key={project.id} src={project.demoUri} title={project.title} />
               ) : (

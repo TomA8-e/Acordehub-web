@@ -229,7 +229,7 @@ export function ProjectsPage() {
         </section>
       )}
 
-      <section className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <section className="mt-6 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
         {projects.map((project) => (
           <Card key={project.id} className="surface-panel group relative overflow-hidden rounded-[28px] transition-transform hover:-translate-y-1 lg:rounded-lg">
             <button
@@ -241,18 +241,18 @@ export function ProjectsPage() {
             <CardContent className="p-0">
               {project.imageUri ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={project.imageUri} alt={project.title} className="h-44 w-full object-cover lg:h-36" />
+                <img src={project.imageUri} alt={project.title} className="h-44 w-full object-cover lg:h-52" />
               ) : (
-                <div className="flex h-44 items-center justify-center bg-[#eef2f0] text-[#8a918c] lg:h-36">
+                <div className="flex h-44 items-center justify-center bg-[#eef2f0] text-[#8a918c] lg:h-52">
                   <FolderArtwork />
                 </div>
               )}
 
-              <div className="p-5 lg:p-4">
+              <div className="p-5 lg:p-6">
                 <div className="mb-3 flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <h2 className="line-clamp-1 font-black text-[#1a1a1a]">{project.title}</h2>
-                    <p className="mt-1 line-clamp-2 text-sm leading-6 text-[#5f6661]">{project.description}</p>
+                    <h2 className="line-clamp-2 font-black text-[#1a1a1a] lg:text-lg">{project.title}</h2>
+                    <p className="mt-1 line-clamp-2 text-sm leading-6 text-[#5f6661] lg:line-clamp-3">{project.description}</p>
                   </div>
                   <Badge className="rounded-full bg-[#e6f4f1] text-[#0f766e] hover:bg-[#e6f4f1]">
                     Activo
