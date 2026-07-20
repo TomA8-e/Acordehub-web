@@ -3,8 +3,8 @@
 import Image from "next/image"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth"
-import { doc, serverTimestamp, setDoc } from "firebase/firestore"
+import { GoogleAuthProvider, createUserWithEmailAndPassword, signInWithPopup, updateProfile } from "firebase/auth"
+import { doc, getDoc, serverTimestamp, setDoc } from "firebase/firestore"
 import { ArrowLeft, ArrowRight, Check, Eye, EyeOff, Loader2, MapPin, Music2, Search, Sparkles, Trash2, UserRound } from "lucide-react"
 import { useState } from "react"
 import { Badge } from "@/components/ui/badge"
@@ -47,6 +47,7 @@ export function RegisterWizard() {
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
+  const [googleRegistration, setGoogleRegistration] = useState(false)
 
   const fullName = `${data.firstName.trim()} ${data.lastName.trim()}`.trim()
 
@@ -56,15 +57,45 @@ export function RegisterWizard() {
       setError("Completa todos tus datos personales.")
       return
     }
-    if (data.password.length < 6) {
+    if (!googleRegistration && data.password.length < 6) {
       setError("La contrasena debe tener al menos 6 caracteres.")
       return
     }
-    if (data.password !== data.confirmPassword) {
+    if (!googleRegistration && data.password !== data.confirmPassword) {
       setError("Las contrasenas no coinciden.")
       return
     }
     setStep(1)
+  }
+
+  const registerWithGoogle = async () => {
+    setError("")
+    setLoading(true)
+    try {
+      const provider = new GoogleAuthProvider()
+      provider.setCustomParameters({ prompt: "select_account" })
+      const credential = await signInWithPopup(auth, provider)
+      const profileSnapshot = await getDoc(doc(db, "users", credential.user.uid))
+      if (profileSnapshot.exists() && profileSnapshot.data().onboardingCompleted) {
+        router.push("/")
+        return
+      }
+
+      const { firstName, lastName } = splitDisplayName(credential.user.displayName)
+      setData((current) => ({
+        ...current,
+        firstName,
+        lastName,
+        email: credential.user.email ?? "",
+        password: "",
+        confirmPassword: "",
+      }))
+      setGoogleRegistration(true)
+    } catch (googleError) {
+      setError(readableGoogleError(googleError))
+    } finally {
+      setLoading(false)
+    }
   }
 
   const createAccount = async () => {
@@ -75,10 +106,12 @@ export function RegisterWizard() {
     }
     setLoading(true)
     try {
-      const credential = await createUserWithEmailAndPassword(auth, data.email.trim(), data.password)
-      await updateProfile(credential.user, { displayName: fullName })
-      await setDoc(doc(db, "users", credential.user.uid), {
-        ...defaultProfile(credential.user.uid, credential.user.email ?? data.email, fullName),
+      const accountUser = googleRegistration && auth.currentUser
+        ? auth.currentUser
+        : (await createUserWithEmailAndPassword(auth, data.email.trim(), data.password)).user
+      await updateProfile(accountUser, { displayName: fullName })
+      await setDoc(doc(db, "users", accountUser.uid), {
+        ...defaultProfile(accountUser.uid, accountUser.email ?? data.email, fullName),
         firstName: data.firstName.trim(),
         lastName: data.lastName.trim(),
         birthDate: data.birthDate,
@@ -170,7 +203,37 @@ export function RegisterWizard() {
               <div className="flex gap-1.5 lg:hidden">{steps.map((_, index) => <span key={index} className={`h-2 rounded-full ${index === step ? "w-8 bg-[#f5a623]" : "w-2 bg-[#dfe4dd]"}`} />)}</div>
             </div>
 
-            {step === 0 && <PersonalStep data={data} setData={setData} showPassword={showPassword} setShowPassword={setShowPassword} />}
+            {step === 0 && (
+              <div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={loading}
+                  onClick={registerWithGoogle}
+                  className="h-[52px] w-full rounded-2xl border-[#dfe4dd] bg-white font-bold text-[#1a1a1a] shadow-sm hover:bg-[#f5f6f2]"
+                >
+                  {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <span className="mr-2 text-lg font-black text-[#4285f4]">G</span>}
+                  {googleRegistration ? "Cambiar cuenta de Google" : "Registrarme con Google"}
+                </Button>
+                <div className="my-6 flex items-center gap-3 text-xs font-bold uppercase tracking-wider text-[#8a918c]">
+                  <span className="h-px flex-1 bg-[#dfe4dd]" />
+                  o completa tus datos
+                  <span className="h-px flex-1 bg-[#dfe4dd]" />
+                </div>
+                {googleRegistration && (
+                  <p className="mb-5 rounded-2xl border border-[#bfe6dc] bg-[#e6f4f1] px-4 py-3 text-sm font-bold text-[#0f766e]">
+                    Cuenta de Google conectada. Completa tu fecha de nacimiento y ubicación para continuar.
+                  </p>
+                )}
+                <PersonalStep
+                  data={data}
+                  setData={setData}
+                  showPassword={showPassword}
+                  setShowPassword={setShowPassword}
+                  googleRegistration={googleRegistration}
+                />
+              </div>
+            )}
             {step === 1 && <MusicStep data={data} setData={setData} />}
             {step === 2 && <ArtistsStep selected={data.favoriteArtists} onChange={(favoriteArtists) => setData((current) => ({ ...current, favoriteArtists }))} />}
             {step === 3 && <PlanStep onChoose={finish} loading={loading} />}
@@ -196,16 +259,20 @@ export function RegisterWizard() {
   )
 }
 
-function PersonalStep({ data, setData, showPassword, setShowPassword }: { data: RegistrationData; setData: React.Dispatch<React.SetStateAction<RegistrationData>>; showPassword: boolean; setShowPassword: (value: boolean) => void }) {
+function PersonalStep({ data, setData, showPassword, setShowPassword, googleRegistration }: { data: RegistrationData; setData: React.Dispatch<React.SetStateAction<RegistrationData>>; showPassword: boolean; setShowPassword: (value: boolean) => void; googleRegistration: boolean }) {
   const field = (key: keyof RegistrationData, value: string) => setData((current) => ({ ...current, [key]: value }))
   return <div className="grid gap-5 sm:grid-cols-2">
     <LabelInput label="Nombre" value={data.firstName} onChange={(value) => field("firstName", value)} placeholder="Tu nombre" icon={UserRound} />
     <LabelInput label="Apellido" value={data.lastName} onChange={(value) => field("lastName", value)} placeholder="Tu apellido" />
-    <LabelInput label="Email" type="email" value={data.email} onChange={(value) => field("email", value)} placeholder="tu@email.com" />
+    <LabelInput label="Email" type="email" value={data.email} onChange={(value) => field("email", value)} placeholder="tu@email.com" disabled={googleRegistration} />
     <LabelInput label="Fecha de nacimiento" type="date" value={data.birthDate} onChange={(value) => field("birthDate", value)} />
     <div className="sm:col-span-2"><LabelInput label="Ubicacion" value={data.location} onChange={(value) => field("location", value)} placeholder="Ciudad, provincia" icon={MapPin} /></div>
-    <PasswordInput label="Contrasena" value={data.password} onChange={(value) => field("password", value)} visible={showPassword} onToggle={() => setShowPassword(!showPassword)} />
-    <PasswordInput label="Repetir contrasena" value={data.confirmPassword} onChange={(value) => field("confirmPassword", value)} visible={showPassword} onToggle={() => setShowPassword(!showPassword)} />
+    {!googleRegistration && (
+      <>
+        <PasswordInput label="Contrasena" value={data.password} onChange={(value) => field("password", value)} visible={showPassword} onToggle={() => setShowPassword(!showPassword)} />
+        <PasswordInput label="Repetir contrasena" value={data.confirmPassword} onChange={(value) => field("confirmPassword", value)} visible={showPassword} onToggle={() => setShowPassword(!showPassword)} />
+      </>
+    )}
   </div>
 }
 
@@ -240,8 +307,10 @@ function PlanStep({ onChoose, loading }: { onChoose: (planId: string) => void; l
   return <div><div className="mb-6 rounded-2xl bg-[#e6f4f1] p-4"><p className="font-black text-[#0f766e]">¡Tu cuenta ya esta lista!</p><p className="mt-1 text-sm text-[#5f6661]">Podes empezar gratis o mejorar tu plan ahora. Siempre vas a poder cambiarlo después.</p></div><div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">{plans.map((plan) => <Card key={plan.id} className={`rounded-2xl ${plan.id === "plus" ? "border-[#f5a623] ring-1 ring-[#f5a623]" : "border-[#dfe4dd]"}`}><CardContent className="flex h-full flex-col p-4"><div className="flex items-center justify-between"><Music2 className="h-5 w-5" />{plan.id === "plus" && <Badge className="bg-[#fff3cf] text-[#c47a00]">Popular</Badge>}</div><h3 className="mt-4 text-xl font-black">{plan.name}</h3><p className="mt-1 font-black text-[#c47a00]">{plan.price} / mes</p><p className="mt-3 text-xs leading-5 text-[#5f6661]">{plan.description}</p><ul className="my-4 space-y-2">{plan.features.slice(0, 3).map((feature) => <li key={feature} className="flex gap-2 text-xs text-[#5f6661]"><Check className="h-3.5 w-3.5 shrink-0 text-[#0f766e]" />{feature}</li>)}</ul><Button disabled={loading} onClick={() => onChoose(plan.id)} variant={plan.id === "free" ? "outline" : "default"} className="mt-auto rounded-xl">{plan.id === "free" ? "Seguir con Free" : "Elegir plan"}</Button></CardContent></Card>)}</div></div>
 }
 
-function LabelInput({ label, value, onChange, placeholder, type = "text", icon: Icon }: { label: string; value: string; onChange: (value: string) => void; placeholder?: string; type?: string; icon?: typeof UserRound }) { return <label className="block"><span className="mb-2 block text-sm font-black text-[#1a1a1a]">{label}</span><div className="relative">{Icon && <Icon className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8a918c]" />}<Input type={type} value={value} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} max={type === "date" ? new Date().toISOString().split("T")[0] : undefined} className={`h-12 rounded-2xl border-[#dfe4dd] bg-[#fbfcf8] ${Icon ? "pl-11" : ""}`} /></div></label> }
+function LabelInput({ label, value, onChange, placeholder, type = "text", icon: Icon, disabled = false }: { label: string; value: string; onChange: (value: string) => void; placeholder?: string; type?: string; icon?: typeof UserRound; disabled?: boolean }) { return <label className="block"><span className="mb-2 block text-sm font-black text-[#1a1a1a]">{label}</span><div className="relative">{Icon && <Icon className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8a918c]" />}<Input type={type} value={value} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} disabled={disabled} max={type === "date" ? new Date().toISOString().split("T")[0] : undefined} className={`h-12 rounded-2xl border-[#dfe4dd] bg-[#fbfcf8] disabled:cursor-not-allowed disabled:opacity-70 ${Icon ? "pl-11" : ""}`} /></div></label> }
 function PasswordInput({ label, value, onChange, visible, onToggle }: { label: string; value: string; onChange: (value: string) => void; visible: boolean; onToggle: () => void }) { return <label className="block"><span className="mb-2 block text-sm font-black text-[#1a1a1a]">{label}</span><div className="relative"><Input type={visible ? "text" : "password"} value={value} onChange={(event) => onChange(event.target.value)} className="h-12 rounded-2xl border-[#dfe4dd] bg-[#fbfcf8] pr-11" /><button type="button" onClick={onToggle} className="absolute right-4 top-1/2 -translate-y-1/2 text-[#5f6661]">{visible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}</button></div></label> }
 function ChoiceGroup({ title, items, selected, onToggle }: { title: string; items: string[]; selected: string[]; onToggle: (value: string) => void }) { return <div><p className="mb-3 text-sm font-black text-[#1a1a1a]">{title}</p><div className="flex flex-wrap gap-2">{items.map((item) => <button key={item} type="button" onClick={() => onToggle(item)} className={`rounded-full px-3 py-2 text-xs font-bold ${selected.includes(item) ? "bg-[#f5a623] text-[#1a1a1a]" : "bg-[#eef2f0] text-[#5f6661]"}`}>{item}</button>)}</div></div> }
 function ArtistAvatar({ artist, large }: { artist: FavoriteArtist; large?: boolean }) { const size = large ? "h-12 w-12" : "h-6 w-6"; return artist.imageUrl ? <img src={artist.imageUrl} alt="" className={`${size} shrink-0 rounded-full object-cover`} /> : <span className={`flex ${size} shrink-0 items-center justify-center rounded-full bg-[#eef2f0]`}><Sparkles className="h-4 w-4" /></span> }
 function readableAuthError(error: unknown) { const message = error instanceof Error ? error.message : ""; if (message.includes("email-already-in-use")) return "Ese email ya tiene una cuenta."; if (message.includes("invalid-email")) return "El email no es valido."; if (message.includes("weak-password")) return "La contrasena es demasiado debil."; return "No pudimos crear la cuenta. Intenta nuevamente." }
+function readableGoogleError(error: unknown) { const message = error instanceof Error ? error.message : ""; if (message.includes("popup-closed-by-user") || message.includes("cancelled-popup-request")) return "Se canceló el acceso con Google."; if (message.includes("popup-blocked")) return "El navegador bloqueó la ventana de Google. Habilita las ventanas emergentes e intenta nuevamente."; if (message.includes("operation-not-allowed")) return "El acceso con Google todavía no está habilitado en Firebase."; if (message.includes("unauthorized-domain")) return "Este dominio todavía no está autorizado para iniciar sesión con Google."; return "No pudimos continuar con Google. Intenta nuevamente." }
+function splitDisplayName(displayName: string | null) { const parts = (displayName || "").trim().split(/\s+/).filter(Boolean); return { firstName: parts[0] || "", lastName: parts.slice(1).join(" ") || "" } }

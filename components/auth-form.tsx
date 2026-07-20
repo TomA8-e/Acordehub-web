@@ -74,7 +74,9 @@ export function AuthForm({ mode }: AuthFormProps) {
     setError("")
     setLoading(true)
     try {
-      const credential = await signInWithPopup(auth, new GoogleAuthProvider())
+      const provider = new GoogleAuthProvider()
+      provider.setCustomParameters({ prompt: "select_account" })
+      const credential = await signInWithPopup(auth, provider)
       await saveInitialUser(
         credential.user.uid,
         credential.user.email,
@@ -82,7 +84,7 @@ export function AuthForm({ mode }: AuthFormProps) {
       )
       router.push("/")
     } catch (err) {
-      setError(err instanceof Error ? err.message : "No se pudo continuar con Google")
+      setError(readableGoogleError(err))
     } finally {
       setLoading(false)
     }
@@ -272,4 +274,13 @@ export function AuthForm({ mode }: AuthFormProps) {
       </section>
     </main>
   )
+}
+
+function readableGoogleError(error: unknown) {
+  const message = error instanceof Error ? error.message : ""
+  if (message.includes("popup-closed-by-user") || message.includes("cancelled-popup-request")) return "Se canceló el acceso con Google."
+  if (message.includes("popup-blocked")) return "El navegador bloqueó la ventana de Google. Habilita las ventanas emergentes e intenta nuevamente."
+  if (message.includes("operation-not-allowed")) return "El acceso con Google todavía no está habilitado en Firebase."
+  if (message.includes("unauthorized-domain")) return "Este dominio todavía no está autorizado para iniciar sesión con Google."
+  return "No se pudo continuar con Google. Intenta nuevamente."
 }
